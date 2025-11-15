@@ -1,0 +1,31 @@
+{% extends 'layouts/app.html' %}
+
+{% block title %}Bienvenido{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4">
+    <div class="w-full max-w-sm">
+        <!-- Logo/Header -->
+        <div class="text-center mb-12">
+            <div class="w-32 h-32 bg-white rounded-2xl shadow-xl mx-auto mb-6 flex items-center justify-center">
+                <div class="w-20 h-20 bg-gray-200 rounded-xl"></div>
+            </div>
+            <h1 class="text-2xl font-semibold text-gray-900">ITUrnito</h1>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="space-y-4">
+            <a href="{{ url_for('auth.register') }}"
+               class="block w-full bg-gray-800 text-white py-4 rounded-lg font-medium text-center hover:bg-gray-900 transition duration-200">
+                Registrarse
+            </a>
+
+            <a href="{{ url_for('auth.login') }}"
+               class="block w-full bg-gray-600 text-white py-4 rounded-lg font-medium text-center hover:bg-gray-700 transition duration-200">
+                Iniciar sesión
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

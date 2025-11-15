@@ -1,0 +1,99 @@
+{% extends 'layouts/paciente.html' %}
+
+{% block header %}Mis Turnos{% endblock %}
+{% block header_mobile %}Mis Turnos{% endblock %}
+
+{% block main_content %}
+<div class="space-y-6">
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100">
+        <div class="p-4 border-b border-gray-100">
+            <h3 class="font-medium text-gray-800 text-base">Próximos Turnos</h3>
+        </div>
+        
+        <div class="space-y-0">
+            {% if turnos_proximos %}
+                {% for turno in turnos_proximos %}
+                <div class="p-4 flex items-start space-x-4 border-b border-gray-100 last:border-b-0">
+                    <div class="w-12 h-12 rounded-lg bg-blue-100 flex-shrink-0 flex flex-col items-center justify-center">
+                        <span class="text-xs text-blue-900 uppercase font-medium">{{ turno.fecha_hora.strftime('%b') }}</span>
+                        <span class="text-xl text-blue-900 font-bold">{{ turno.fecha_hora.strftime('%d') }}</span>
+                    </div>
+                    
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-medium text-gray-900 text-sm">
+                            {{ turno.fecha_hora.strftime('%H:%M') }} hs
+                        </h4>
+                        <p class="text-sm text-gray-600">
+                            Dr. {{ turno.doctor.user.name if turno.doctor and turno.doctor.user else 'N/A' }}
+                        </p>
+                        <p class="text-xs text-gray-500 uppercase tracking-wide font-medium mt-1">
+                            {{ turno.doctor.especialidad.nombre if turno.doctor and turno.doctor.especialidad else 'N/A' }}
+                        </p>
+                        
+                        <div class="mt-2">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                {{ turno.estado | capitalize }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <form action="{{ url_for('paciente.cancelar_turno', turno_id=turno.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres cancelar este turno?');">
+                        <button type="submit" class="bg-red-100 text-red-700 px-3 py-1 rounded-lg font-medium text-xs hover:bg-red-200 transition-colors flex-shrink-0">
+                            Cancelar
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-sm text-gray-500 p-4 text-center">No tienes próximos turnos.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100">
+        <div class="p-4 border-b border-gray-100">
+            <h3 class="font-medium text-gray-800 text-base">Historial de Turnos</h3>
+        </div>
+        
+        <div class="space-y-0">
+            {% if turnos_pasados %}
+                {% for turno in turnos_pasados %}
+                <div class="p-4 flex items-center space-x-4 border-b border-gray-100 last:border-b-0">
+                    <div class="w-12 h-12 rounded-lg bg-gray-100 flex-shrink-0 flex flex-col items-center justify-center">
+                        <span class="text-xs text-gray-500 uppercase font-medium">{{ turno.fecha_hora.strftime('%b') }}</span>
+                        <span class="text-xl text-gray-600 font-bold">{{ turno.fecha_hora.strftime('%d') }}</span>
+                    </div>
+                    
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-medium text-gray-900 text-sm">
+                            {{ turno.fecha_hora.strftime('%H:%M') }} hs
+                        </h4>
+                        <p class="text-sm text-gray-600">
+                            Dr. {{ turno.doctor.user.name if turno.doctor and turno.doctor.user else 'N/A' }}
+                        </p>
+                        
+                        <div class="mt-2">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if turno.estado == 'completado' %}
+                                            bg-green-100 text-green-800
+                                        {% elif turno.estado == 'cancelado' %}
+                                            bg-red-100 text-red-800
+                                        {% else %}
+                                            bg-gray-100 text-gray-800
+                                        {% endif %}">
+                                {{ turno.estado | capitalize }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-sm text-gray-500 p-4 text-center">No tienes turnos en tu historial.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+

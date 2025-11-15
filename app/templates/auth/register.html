@@ -1,0 +1,80 @@
+{% extends 'layouts/app.html' %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4 py-8">
+    <div class="max-w-sm w-full bg-white rounded-lg shadow-sm border p-6">
+        <!-- Header con botón back -->
+        <div class="flex items-center mb-6">
+            <a href="{{ url_for('auth.login') }}" class="text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </a>
+        </div>
+
+        <!-- Logo/ITUrnito -->
+        <div class="text-center mb-6">
+            <div class="w-24 h-24 bg-gray-200 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                <span class="text-gray-500 text-xs">ITUrnito</span>
+            </div>
+        </div>
+
+        <h2 class="text-xl font-semibold text-center mb-6">Registro de Usuario</h2>
+
+        <form method="POST" action="{{ url_for('auth.register') }}" class="space-y-4">
+
+            <div>
+                <input type="email"
+                       name="email"
+                       placeholder="Mail"
+                       class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800"
+                       required>
+            </div>
+
+            <div>
+                <input type="text"
+                       name="name"
+                       placeholder="Nombre completo"
+                       class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800"
+                       required>
+            </div>
+
+            <div>
+                <input type="text"
+                       name="dni"
+                       placeholder="DNI"
+                       class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800">
+            </div>
+
+            <div>
+                <input type="tel"
+                       name="telefono"
+                       placeholder="Teléfono"
+                       class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800">
+            </div>
+
+            <div>
+                <input type="password"
+                       name="password"
+                       placeholder="Contraseña"
+                       class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800"
+                       required>
+            </div>
+
+            <div>
+                <input type="password"
+                       name="password_confirmation"
+                       placeholder="Confirmar Contraseña"
+                       class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800"
+                       required>
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-gray-800 text-white py-3 rounded-lg font-medium hover:bg-gray-900 transition mt-6">
+                Crear Usuario
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

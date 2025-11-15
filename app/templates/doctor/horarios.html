@@ -1,0 +1,230 @@
+{% extends 'layouts/doctor.html' %}
+
+{% block header %}Configurar Horarios{% endblock %}
+
+{% block main_content %}
+{# ¡LA CORRECCIÓN ESTÁ AQUÍ! Cambiamos las comillas de x-data a comillas simples ' #}
+<div x-data='horariosDoctor({{ config_json | safe }}, {{ horarios_json | safe }})' class="space-y-6">
+    <div class="bg-white rounded-lg shadow-sm border p-4">
+        <h3 class="font-medium text-gray-900 mb-4">Configuración General</h3>
+        <form @submit.prevent="guardarConfiguracion()" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Duración por Turno (minutos)</label>
+                    <select x-model="configuracion.duracion_turno"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800">
+                        <option value="15">15 minutos</option>
+                        <option value="20">20 minutos</option>
+                        <option value="30">30 minutos</option>
+                        <option value="45">45 minutos</option>
+                        <option value="60">60 minutos</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Modalidad</label>
+                    <select x-model="configuracion.modalidad"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800">
+                        <option value="presencial">Solo Presencial</option>
+                        <option value="virtual">Solo Virtual</option>
+                        <option value="ambas">Ambas Modalidades</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Precio por Consulta</label>
+                <input type="number"
+                       x-model="configuracion.precio_consulta"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800"
+                       placeholder="0.00">
+            </div>
+            <button type="submit"
+                    class="w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+                Guardar Configuración
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border p-4">
+        <h3 class="font-medium text-gray-900 mb-4">Horarios de Atención</h3>
+
+        <div class="space-y-4">
+            <template x-for="(dia, index) in diasSemana" :key="dia.codigo">
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <input type="checkbox"
+                                   x-model="dia.activo"
+                                   class="rounded border-gray-300 text-gray-900 focus:ring-gray-800">
+                            <label class="font-medium text-gray-900" x-text="dia.nombre"></label>
+                        </div>
+                        <button @click="dia.activo = !dia.activo"
+                                class="text-sm text-gray-900 hover:text-blue-800">
+                            <span x-text="dia.activo ? 'Desactivar' : 'Activar'"></span>
+                        </button>
+                    </div>
+
+                    <div x-show="dia.activo" class="space-y-3">
+                        <template x-for="(bloque, bloqueIndex) in dia.bloques" :key="bloqueIndex">
+                            <div class="flex items-center space-x-2">
+                                <input type="time"
+                                       x-model="bloque.inicio"
+                                       class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-800">
+                                <span class="text-gray-500">hasta</span>
+                                <input type="time"
+                                       x-model="bloque.fin"
+                                       class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-800">
+                                <button @click="eliminarBloque(index, bloqueIndex)"
+                                        class="text-red-600 hover:text-red-800 p-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </template>
+
+                        <button @click="agregarBloque(index)"
+                                class="text-gray-900 hover:text-blue-800 text-sm flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Agregar horario
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <div class="mt-6">
+            <button @click="guardarHorarios()"
+                    class="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition">
+                Guardar Horarios
+            </button>
+        </div>
+    </div>
+
+    </div>
+
+<script>
+// La lógica de Alpine.js ahora recibe los datos iniciales desde Flask
+function horariosDoctor(configInicial, diasSemanaInicial) {
+
+    // Plantilla de días por defecto si no viene nada de la BD
+    const diasPorDefecto = [
+        { codigo: 'lunes', nombre: 'Lunes', activo: false, bloques: [{ inicio: '09:00', fin: '17:00' }] },
+        { codigo: 'martes', nombre: 'Martes', activo: false, bloques: [{ inicio: '09:00', fin: '17:00' }] },
+        { codigo: 'miercoles', nombre: 'Miércoles', activo: false, bloques: [{ inicio: '09:00', fin: '17:00' }] },
+        { codigo: 'jueves', nombre: 'Jueves', activo: false, bloques: [{ inicio: '09:00', fin: '17:00' }] },
+        { codigo: 'viernes', nombre: 'Viernes', activo: false, bloques: [{ inicio: '09:00', fin: '17:00' }] },
+        { codigo: 'sabado', nombre: 'Sábado', activo: false, bloques: [{ inicio: '09:00', fin: '13:00' }] },
+        { codigo: 'domingo', nombre: 'Domingo', activo: false, bloques: [{ inicio: '09:00', fin: '13:00' }] }
+    ];
+
+    return {
+        // Usa los datos de Flask o un valor por defecto
+        configuracion: configInicial || { duracion_turno: 30, modalidad: "presencial", precio_consulta: 0 },
+        diasSemana: diasSemanaInicial && diasSemanaInicial.length > 0 ? diasSemanaInicial : diasPorDefecto,
+        excepciones: [],
+        nuevaExcepcion: {
+            fecha: '',
+            motivo: ''
+        },
+
+        init() {
+            // Ya no cargamos los horarios aquí, se inyectan desde Flask
+            this.cargarExcepciones();
+        },
+
+        async cargarExcepciones() {
+            try {
+                const response = await fetch('{{ url_for("doctor.obtener_excepciones") }}');
+                const data = await response.json();
+                if (data.excepciones) {
+                    this.excepciones = data.excepciones;
+                }
+            } catch (e) {
+                console.error("Error al cargar excepciones", e);
+            }
+        },
+
+        agregarBloque(diaIndex) {
+            this.diasSemana[diaIndex].bloques.push({ inicio: '09:00', fin: '17:00' });
+        },
+
+        eliminarBloque(diaIndex, bloqueIndex) {
+            this.diasSemana[diaIndex].bloques.splice(bloqueIndex, 1);
+        },
+
+        async guardarConfiguracion() {
+            try {
+                const response = await fetch('{{ url_for("doctor.guardar_configuracion") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.configuracion)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Configuración guardada correctamente');
+                } else {
+                    alert(data.message || 'Error al guardar');
+                }
+            } catch (e) {
+                console.error("Error al guardar config", e);
+                alert('Error de red');
+            }
+        },
+
+        async guardarHorarios() {
+            try {
+                const response = await fetch('{{ url_for("doctor.guardar_horarios") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ horarios: this.diasSemana })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Horarios guardados correctamente');
+                } else {
+                    alert(data.message || 'Error al guardar');
+                }
+            } catch (e) {
+                console.error("Error al guardar horarios", e);
+                alert('Error de red');
+            }
+        },
+
+        agregarExcepcion() {
+            if (this.nuevaExcepcion.fecha) {
+                this.excepciones.push({ ...this.nuevaExcepcion });
+                this.nuevaExcepcion = { fecha: '', motivo: '' };
+                this.guardarExcepciones();
+            }
+        },
+
+        eliminarExcepcion(index) {
+            this.excepciones.splice(index, 1);
+            this.guardarExcepciones();
+        },
+
+        async guardarExcepciones() {
+            try {
+                const response = await fetch('{{ url_for("doctor.guardar_excepciones") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ excepciones: this.excepciones })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    console.log('Excepciones guardadas');
+                } else {
+                    alert(data.message || 'Error al guardar');
+                }
+            } catch (e) {
+                console.error("Error al guardar excepciones", e);
+                alert('Error de red');
+            }
+        }
+    }
+}
+</script>
+{% endblock %}
+

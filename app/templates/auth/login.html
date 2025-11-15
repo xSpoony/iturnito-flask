@@ -1,0 +1,264 @@
+{% extends 'layouts/app.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-50 flex items-center justify-center px-4 py-8">
+    <div class="max-w-sm w-full">
+
+        <!-- Tarjeta principal -->
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+
+            <!-- Header con logo -->
+            <div class="bg-gradient-to-r from-gray-600 to-gray-700 p-6 text-center text-white">
+                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-xl mx-auto mb-3 flex items-center justify-center">
+                    <!--
+                      --- ¡LA CORRECCIÓN DEL LOGO ESTÁ AQUÍ! ---
+                      Añadimos 'text-gray-700' para forzar que el
+                      'currentColor' del SVG sea oscuro.
+                    -->
+                    <svg class="w-8 h-8 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h1 class="text-xl font-bold tracking-wide">ITurnito</h1>
+                <p class="text-gray-100 text-sm mt-1">Sistema de Turnos Médicos</p>
+            </div>
+
+            <!-- Formulario -->
+            <div class="p-6">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-2">Bienvenido</h2>
+                    <p class="text-gray-600 text-sm">Ingresa tus credenciales para continuar</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-4" id="loginForm">
+
+                    <!-- Campo Email -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">
+                            Email
+                        </label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+                                </svg>
+                            </div>
+                            <input type="email"
+                                   name="email"
+                                   placeholder="tu@email.com"
+                                   class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Campo Contraseña -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">
+                            Contraseña
+                        </label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                </svg>
+                            </div>
+                            <input type="password"
+                                   name="password"
+                                   placeholder="Tu contraseña"
+                                   id="passwordInput"
+                                   class="w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
+                                   required>
+                            <button type="button"
+                                    onclick="togglePassword()"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                                <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recordar sesión -->
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox"
+                                   name="remember"
+                                   value="true"
+                                   class="w-4 h-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500">
+                            <span class="text-sm text-gray-600">Recordarme</span>
+                        </label>
+                        <a href="{{ url_for('auth.password_request') }}" class="text-sm text-gray-600 hover:text-gray-700 font-medium transition-colors">
+                            ¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+
+                    <!-- Botón de envío -->
+                    <button type="submit"
+                            id="submitBtn"
+                            class="w-full bg-gradient-to-r from-gray-600 to-gray-700 text-white py-3 rounded-lg font-semibold hover:from-gray-700 hover:to-gray-800 transition-all duration-200 transform hover:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-lg">
+                        <span id="submitText">Iniciar Sesión</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-100">
+                <div class="text-center">
+                    <p class="text-sm text-gray-600 mb-2">¿No tienes una cuenta?</p>
+                    <a href="{{ url_for('auth.register') }}"
+                       class="inline-flex items-center justify-center w-full py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                        Crear cuenta nueva
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Animaciones personalizadas */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.max-w-sm {
+    animation: slideIn 0.6s ease-out;
+}
+
+/* Foco mejorado */
+input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Efecto de botón presionado */
+button:active {
+    transform: scale(0.96);
+}
+
+/* Spinner de carga */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Transiciones suaves */
+* {
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Mejoras responsivas */
+@media (max-width: 480px) {
+    .rounded-2xl {
+        border-radius: 1rem;
+    }
+
+    .p-6 {
+        padding: 1.25rem;
+    }
+}
+</style>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+// Función para mostrar/ocultar contraseña
+function togglePassword() {
+    const passwordInput = document.getElementById('passwordInput');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+        `;
+    } else {
+        passwordInput.type = 'password';
+        eyeIcon.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+        `;
+    }
+}
+
+// Manejo del envío del formulario
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+
+    // Mostrar estado de carga
+    submitBtn.disabled = true;
+    submitText.textContent = 'Iniciando sesión...';
+
+    // Opcional: Quitar estado de carga si hay un error
+    setTimeout(() => {
+        if (window.location.href === window.location.href) {
+            submitBtn.disabled = false;
+            submitText.textContent = 'Iniciar Sesión';
+        }
+    }, 5000);
+});
+
+// Validación de inputs
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('input[required]');
+
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.classList.add('border-red-300');
+                this.classList.remove('border-gray-200');
+            } else {
+                this.classList.remove('border-red-300');
+                this.classList.add('border-gray-200');
+            }
+        });
+
+        input.addEventListener('input', function() {
+            if (this.classList.contains('border-red-300') && this.value.trim() !== '') {
+                this.classList.remove('border-red-300');
+                this.classList.add('border-gray-200');
+            }
+        });
+    });
+});
+
+// Auto-focus en el primer input
+window.addEventListener('load', function() {
+    const firstInput = document.querySelector('input[name="email"]');
+    if (firstInput) {
+        firstInput.focus();
+    }
+});
+</script>
+{% endblock %}
+

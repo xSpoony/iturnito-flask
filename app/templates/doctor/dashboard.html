@@ -1,0 +1,80 @@
+{% extends 'layouts/doctor.html' %}
+
+{% block title %}Dashboard del Doctor{% endblock %}
+{% block header %}Dashboard{% endblock %}
+{% block header_mobile %}Dashboard{% endblock %}
+
+{% block main_content %}
+<div class="space-y-6">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="bg-white rounded-lg shadow-sm border p-4 flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                <svg class="w-6 h-6 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="text-3xl font-bold text-gray-900">{{ stats.turnos_hoy }}</div>
+                <div class="text-sm font-medium text-gray-500">Turnos Hoy</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border p-4 flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <svg class="w-6 h-6 text-indigo-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="text-3xl font-bold text-gray-900">{{ stats.turnos_semana }}</div>
+                <div class="text-sm font-medium text-gray-500">Esta Semana</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border p-4 flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center">
+                <svg class="w-6 h-6 text-yellow-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="text-3xl font-bold text-gray-900">{{ stats.turnos_pendientes }}</div>
+                <div class="text-sm font-medium text-gray-500">Pendientes</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border p-4 flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
+                <svg class="w-6 h-6 text-green-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="text-3xl font-bold text-gray-900">{{ stats.pacientes }}</div>
+                <div class="text-sm font-medium text-gray-500">Pacientes</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border p-4">
+        <h3 class="font-medium text-gray-900 mb-4">Acciones Rápidas</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="{{ url_for('doctor.mis_turnos') }}" class="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-center">
+                Ver Mis Turnos
+            </a>
+            <a href="{{ url_for('doctor.horarios') }}" class="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-center">
+                Gestionar Horarios
+            </a>
+            <a href="{{ url_for('doctor.pacientes') }}" class="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-center">
+                Ver Mis Pacientes
+            </a>
+            <a href="{{ url_for('doctor.perfil') }}" class="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg text-center">
+                Editar Perfil
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

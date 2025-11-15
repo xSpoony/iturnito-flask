@@ -1,0 +1,147 @@
+{% extends 'layouts/app.html' %}
+
+{# El layout/app.html ya tiene un <title>, pero podemos anularlo si queremos #}
+{% block title %}Panel de Admin - iTurnito{% endblock %}
+
+{% block content %}
+<div x-data="{ sidebarOpen: false }" class="min-h-screen bg-gray-50 lg:flex">
+
+    <div class="hidden lg:flex lg:flex-shrink-0">
+        <div class="flex flex-col w-64">
+            <div class="flex flex-col flex-grow bg-white border-r border-gray-200 pt-5 pb-4 overflow-y-auto">
+                <div class="flex items-center flex-shrink-0 px-4">
+                    <div class="w-8 h-8 bg-gray-900 rounded"></div>
+                    <span class="ml-2 text-lg font-semibold text-gray-900">Panel Admin</span>
+                </div>
+
+                <nav class="mt-8 flex-1 px-2 space-y-1">
+                    <a href="{{ url_for('admin.dashboard') }}"
+                       class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ 'bg-blue-100 text-blue-900' if request.endpoint == 'main.admin_dashboard' else 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                        <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9-4 9 4M3 7l9 4 9-4"></path>
+                        </svg>
+                        Dashboard
+                    </a>
+
+                    <a href="{{ url_for('admin.doctores_index') }}"
+                       class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ 'bg-blue-100 text-blue-900' if request.endpoint.startswith('admin.doctores') else 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                        <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Doctores
+                    </a>
+
+                    <a href="{{ url_for('admin.especialidades_index') }}"
+                       class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ 'bg-blue-100 text-blue-900' if request.endpoint.startswith('admin.especialidades') else 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                        <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        Especialidades
+                    </a>
+
+                    <a href="{{ url_for('admin.pacientes_index') }}"
+                       class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ 'bg-blue-100 text-blue-900' if request.endpoint.startswith('admin.pacientes') else 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                        <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Pacientes
+                    </a>
+
+                    <a href="{{ url_for('admin.turnos_index') }}"
+                       class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ 'bg-blue-100 text-blue-900' if request.endpoint == 'admin.turnos_index' else 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                        <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Turnos
+                    </a>
+
+                    <a href="{{ url_for('admin.reportes_index') }}"
+                       class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ 'bg-blue-100 text-blue-900' if request.endpoint == 'admin.reportes_index' else 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                        <svg class="mr-3 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Reportes
+                    </a>
+                </nav>
+
+                <div class="flex-shrink-0 flex border-t border-gray-200 p-4">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-medium text-gray-700">{{ current_user.name[0] }}</span>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-700">{{ current_user.name }}</p>
+                            <a href="{{ url_for('auth.logout') }}" class="text-xs text-gray-500 hover:text-gray-700">Cerrar sesión</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="lg:hidden">
+        <div class="flex items-center justify-between bg-white px-4 py-2 border-b border-gray-200">
+            <h1 class="text-lg font-semibold text-gray-900">{% block header_mobile %}Panel Admin{% endblock %}</h1>
+            <button @click="sidebarOpen = true" class="text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="flex flex-col flex-1 overflow-hidden">
+        <div class="hidden lg:block bg-white shadow-sm border-b border-gray-200">
+            <div class="px-4 py-4 sm:px-6 lg:px-8">
+                <h1 class="text-2xl font-semibold text-gray-900">{% block header %}Dashboard{% endblock %}</h1>
+
+                {% if breadcrumbs is defined %}
+                <nav class="flex mt-2" aria-label="Breadcrumb">
+                    <ol class="flex items-center space-x-2">
+                        {% for breadcrumb in breadcrumbs %}
+                        <li class="flex">
+                            {% if not loop.last %}
+                                <a href="{{ breadcrumb.url }}" class="text-gray-500 hover:text-gray-700">{{ breadcrumb.name }}</a>
+                                <svg class="ml-2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            {% else %}
+                                <span class="text-gray-900">{{ breadcrumb.name }}</span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+
+        <main class="flex-1 overflow-y-auto">
+            <div class="py-6">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                      {% if messages %}
+                        {% for category, message in messages %}
+                          <div class="mb-4 px-4 py-3 rounded-md
+                                      {% if category == 'danger' %}
+                                        bg-red-100 border border-red-400 text-red-700
+                                      {% elif category == 'success' %}
+                                        bg-green-100 border border-green-400 text-green-700
+                                      {% else %}
+                                        bg-blue-100 border border-blue-400 text-blue-700
+                                      {% endif %}"
+                               role="alert">
+                              {{ message }}
+                          </div>
+                        {% endfor %}
+                      {% endif %}
+                    {% endwith %}
+                    {% block main_content %}{% endblock %}
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+

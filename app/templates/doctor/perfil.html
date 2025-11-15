@@ -1,0 +1,72 @@
+{% extends 'layouts/doctor.html' %}
+
+{% block title %}Mi Perfil{% endblock %}
+{% block header %}Mi Perfil{% endblock %}
+{% block header_mobile %}Mi Perfil{% endblock %}
+
+{% block main_content %}
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    
+    <form action="{{ url_for('doctor.perfil') }}" method="POST">
+        
+        <div class="p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Datos Personales y Profesionales</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                    <input type="text" name="name" id="name" required
+                           value="{{ current_user.name }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" name="email" id="email" required
+                           value="{{ current_user.email }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="dni" class="block text-sm font-medium text-gray-700">DNI</label>
+                    <input type="text" name="dni" id="dni"
+                           value="{{ current_user.dni or '' }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                    <input type="tel" name="telefono" id="telefono"
+                           value="{{ current_user.telefono or '' }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="matricula" class="block text-sm font-medium text-gray-700">Matrícula Profesional</label>
+                    <input type="text" name="matricula" id="matricula"
+                           value="{{ doctor.matricula or '' }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Nueva Contraseña</slabel>
+                    <input type="password" name="password" id="password"
+                           placeholder="Dejar en blanco para no cambiar"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 px-6 py-4 flex justify-end">
+            <button type="submit"
+                    class="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-900">
+                Guardar Cambios
+            </button>
+        </div>
+        
+    </form>
+</div>
+{% endblock %}
+

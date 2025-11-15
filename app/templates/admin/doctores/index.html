@@ -1,0 +1,87 @@
+{% extends 'layouts/admin.html' %}
+
+{% block title %}Gestión de Doctores{% endblock %}
+{% block header %}Gestión de Doctores{% endblock %}
+{% block header_mobile %}Doctores{% endblock %}
+
+{% block main_content %}
+<div class="flex justify-end mb-4">
+    <a href="{{ url_for('admin.doctores_crear') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring focus:ring-gray-300 disabled:opacity-25 transition">
+        Crear Doctor
+    </a>
+</div>
+
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nombre
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Especialidad
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Teléfono
+                </th>
+                <th scope="col" class="relative px-6 py-3">
+                    <span class="sr-only">Acciones</span>
+                </th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+
+            {% for doctor in doctores %}
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">
+                        {{ doctor.user.name }}
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-700">
+                        {{ doctor.user.email }}
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-700">
+                        {{ doctor.especialidad.nombre if doctor.especialidad else 'N/A' }}
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-700">
+                        {{ doctor.user.telefono if doctor.user.telefono else 'N/A' }}
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+
+                    <a href="{{ url_for('admin.doctores_editar', doctor_id=doctor.id) }}" class="text-blue-600 hover:text-blue-900 mr-3">Editar</a>
+
+                    <form action="{{ url_for('admin.doctores_eliminar', doctor_id=doctor.id) }}" method="POST" class="inline-block" onsubmit="return confirm('¿Estás seguro de que quieres eliminar a {{ doctor.user.name }}? Esta acción es irreversible.');">
+                        <button type"submit" class="text-red-600 hover:text-red-900" style="background:none; border:none; padding:0; cursor:pointer;">
+                            Eliminar
+                        </button>
+                    </form>
+
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">
+                    No se encontraron doctores.
+                </td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+
+    <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+        {# Paginación #}
+    </div>
+</div>
+{% endblock %}
+

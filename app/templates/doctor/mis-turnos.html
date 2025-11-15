@@ -1,0 +1,281 @@
+{% extends 'layouts/doctor.html' %}
+
+{% block header %}Mis Turnos{% endblock %}
+{% block header_mobile %}Mis Turnos{% endblock %}
+
+{% block main_content %}
+<div x-data="turnosDoctor()" class="space-y-6">
+    <div class="bg-white rounded-lg shadow-sm border p-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-medium text-gray-900">Filtrar Turnos</h3>
+            <div class="flex items-center space-x-2">
+                <button @click="vista = 'dia'"
+                        :class="vista === 'dia' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-3 py-1 rounded text-sm">
+                    Día
+                </button>
+                <button @click="vista = 'semana'"
+                        :class="vista === 'semana' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-3 py-1 rounded text-sm">
+                    Semana
+                </button>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between mb-4">
+            <button @click="fechaAnterior()" class="p-2 hover:bg-gray-100 rounded">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <div class="text-center">
+                <div class="font-medium" x-text="fechaActual.format('dddd, D [de] MMMM [de] YYYY')"></div>
+            </div>
+            <button @click="fechaSiguiente()" class="p-2 hover:bg-gray-100 rounded">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="flex space-x-2">
+            <button @click="filtroEstado = 'todos'; cargarTurnos();"
+                    :class="filtroEstado === 'todos' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'"
+                    class="px-3 py-1 rounded text-sm">
+                Todos
+            </button>
+            <button @click="filtroEstado = 'pendiente'; cargarTurnos();"
+                    :class="filtroEstado === 'pendiente' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700'"
+                    class="px-3 py-1 rounded text-sm">
+                Pendientes
+            </button>
+            <button @click="filtroEstado = 'completado'; cargarTurnos();"
+                    :class="filtroEstado === 'completado' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'"
+                    class="px-3 py-1 rounded text-sm">
+                Completados
+            </button>
+            <button @click="filtroEstado = 'cancelado'; cargarTurnos();"
+                    :class="filtroEstado === 'cancelado' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'"
+                    class="px-3 py-1 rounded text-sm">
+                Cancelados
+            </button>
+        </div>
+    </div>
+
+    <div class="space-y-4">
+        {% if not turnos %}
+            <div class="bg-white rounded-lg shadow-sm border p-12 text-center">
+                <h3 class="text-lg font-medium text-gray-800 mb-2">Sin turnos</h3>
+                <p class="text-gray-500 text-sm">No se encontraron turnos que coincidan con los filtros seleccionados.</p>
+            </div>
+        {% endif %}
+
+        {% for turno in turnos %}
+        <div class="bg-white rounded-lg shadow-sm border p-4" x-data="{ expandido: false, notas: '{{ turno.notas_doctor if turno.notas_doctor is not none else '' | e }}' }">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-3">
+                    <div class="text-lg font-semibold text-gray-900">
+                        {{ turno.fecha_hora.strftime('%H:%M') }}
+                    </div>
+                    <div class="h-6 w-px bg-gray-300"></div>
+                    <div>
+                        <span class="px-2 py-1 text-xs rounded-full
+                            {% if turno.estado == 'pendiente' %}bg-yellow-100 text-yellow-800
+                            {% elif turno.estado == 'completado' %}bg-green-100 text-green-800
+                            {% elif turno.estado == 'cancelado' %}bg-red-100 text-red-800
+                            {% else %}bg-gray-100 text-gray-800
+                            {% endif %}">
+                            {{ turno.estado | capitalize }}
+                        </span>
+                    </div>
+                </div>
+                <button @click="expandido = !expandido" class="text-gray-500">
+                    <svg class="w-5 h-5 transform transition-transform" :class="expandido ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex items-start space-x-3 mb-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span class="text-gray-900 font-medium">
+                        {{ turno.paciente.user.name[0] }}
+                    </span>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-medium text-gray-900">{{ turno.paciente.user.name }}</h3>
+                    <p class="text-sm text-gray-600">{{ turno.paciente.user.email }}</p>
+                    <p class="text-sm text-gray-600">{{ turno.paciente.user.telefono | default('N/A') }}</p>
+                    {% if turno.paciente.obra_social %}
+                        <p class="text-xs text-gray-500">{{ turno.paciente.obra_social }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div x-show="expandido" x-transition class="border-t pt-4 space-y-4">
+                {% if turno.observaciones %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones del Paciente</label>
+                    <p class="text-sm text-gray-600 bg-gray-50 p-3 rounded">{{ turno.observaciones }}</p>
+                </div>
+                {% endif %}
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Notas del Médico</label>
+                    <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800"
+                              rows="3"
+                              placeholder="Agregar notas sobre la consulta..."
+                              x-model="notas"></textarea>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <div class="flex space-x-2">
+                        {% if turno.estado == 'pendiente' %}
+                            <button @click="completarTurno({{ turno.id }})"
+                                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm">
+                                Marcar como Completado
+                            </button>
+                            <button @click="cancelarTurno({{ turno.id }})"
+                                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm">
+                                Cancelar Turno
+                            </button>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        <button @click="guardarNotas({{ turno.id }}, notas)"
+                                class="px-4 py-2 bg-gray-900 text-white rounded hover:bg-blue-700 transition text-sm">
+                            Guardar Notas
+                        </button>
+                        {% if turno.modalidad == 'virtual' and turno.estado == 'pendiente' %}
+                            <button @click="iniciarVideoLlamada({{ turno.id }})"
+                                    class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition text-sm">
+                                Iniciar Consulta
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="flex justify-center">
+        </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.7/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.7/plugin/updateLocale.js"></script>
+<script>
+// Configurar Day.js en español
+dayjs.extend(dayjs_plugin_updateLocale);
+dayjs.updateLocale('en', {
+  months: [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
+    "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ],
+  weekdays: [
+    "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"
+  ],
+  weekdaysShort: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+});
+
+function turnosDoctor() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const fechaParam = urlParams.get('fecha');
+
+    return {
+        vista: urlParams.get('vista') || 'dia',
+        fechaActual: fechaParam ? dayjs(fechaParam) : dayjs(),
+        filtroEstado: urlParams.get('estado') || 'todos',
+
+        fechaAnterior() {
+            if (this.vista === 'dia') {
+                this.fechaActual = this.fechaActual.subtract(1, 'day');
+            } else {
+                this.fechaActual = this.fechaActual.subtract(1, 'week');
+            }
+            this.cargarTurnos();
+        },
+
+        fechaSiguiente() {
+            if (this.vista === 'dia') {
+                this.fechaActual = this.fechaActual.add(1, 'day');
+            } else {
+                this.fechaActual = this.fechaActual.add(1, 'week');
+            }
+            this.cargarTurnos();
+        },
+
+        cargarTurnos() {
+            const params = new URLSearchParams();
+            params.set('fecha', this.fechaActual.format('YYYY-MM-DD'));
+            params.set('vista', this.vista);
+            params.set('estado', this.filtroEstado);
+            window.location.search = params.toString();
+        },
+
+        async _enviarAccion(url, confirmacion, datos = null) {
+            if (confirmacion && !confirm(confirmacion)) {
+                return;
+            }
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: datos ? JSON.stringify(datos) : null
+                });
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Ocurrió un error.');
+                }
+            } catch(e) {
+                alert('Error de red al realizar la acción.');
+            }
+        },
+
+        completarTurno(turnoId) {
+            // ¡TRADUCIDO! Llama a la ruta correcta
+            this._enviarAccion('{{ url_for("doctor.completar_turno", turno_id=0) }}'.replace('0', turnoId), 
+                               '¿Marcar este turno como completado?');
+        },
+
+        cancelarTurno(turnoId) {
+            // ¡TRADUCIDO! Llama a la ruta correcta
+            this._enviarAccion('{{ url_for("doctor.cancelar_turno", turno_id=0) }}'.replace('0', turnoId), 
+                               '¿Cancelar este turno?');
+        },
+
+        async guardarNotas(turnoId, notas) {
+            // (Esta función usa un alert() en lugar de _enviarAccion para 
+            // no recargar la página, lo cual está bien)
+            try {
+                const url = '{{ url_for("doctor.guardar_notas", turno_id=0) }}'.replace('0', turnoId);
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notas: notas || '' })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Notas guardadas correctamente');
+                } else {
+                     alert(data.message || 'Error al guardar notas.');
+                }
+            } catch (e) {
+                alert('Error de red al guardar notas.');
+            }
+        },
+
+        iniciarVideoLlamada(turnoId) {
+            const url = '{{ url_for("doctor.iniciar_videollamada", turno_id=0) }}'.replace('0', turnoId);
+            window.open(url, '_blank');
+        }
+    }
+}
+</script>
+{% endblock %}
+

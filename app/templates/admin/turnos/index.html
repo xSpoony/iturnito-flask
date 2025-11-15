@@ -1,0 +1,78 @@
+{% extends 'layouts/admin.html' %}
+
+{% block title %}Gestión de Turnos{% endblock %}
+{% block header %}Gestión de Turnos{% endblock %}
+{% block header_mobile %}Turnos{% endblock %}
+
+{% block main_content %}
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Fecha y Hora
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Doctor
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Paciente
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Estado
+                </th>
+                <th scope="col" class="relative px-6 py-3">
+                    <span class="sr-only">Acciones</span>
+                </th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            
+            {% for turno in turnos %}
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">
+                        {{ turno.fecha_hora.strftime('%Y-%m-%d %H:%M') }}
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-700">
+                        {{ turno.doctor.user.name if turno.doctor and turno.doctor.user else 'N/A' }}
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-700">
+                        {{ turno.paciente.user.name if turno.paciente and turno.paciente.user else 'N/A' }}
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {% if turno.estado == 'pendiente' or turno.estado == 'reservado' %}
+                                    bg-yellow-100 text-yellow-800
+                                {% elif turno.estado == 'completado' %}
+                                    bg-green-100 text-green-800
+                                {% elif turno.estado == 'cancelado' %}
+                                    bg-red-100 text-red-800
+                                {% else %}
+                                    bg-gray-100 text-gray-800
+                                {% endif %}">
+                        {{ turno.estado | capitalize }}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">Detalles</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">
+                    No se encontraron turnos.
+                </td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

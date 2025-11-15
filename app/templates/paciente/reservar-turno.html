@@ -1,0 +1,508 @@
+{% extends 'layouts/paciente.html' %}
+
+{% block header %}Reserva de Turno{% endblock %}
+
+{% block main_content %}
+
+<div class="space-y-4">
+    <!-- Mensajes (controlados por JS) -->
+    <div id="mensaje-container" class="hidden text-white px-4 py-3 rounded-lg shadow-lg border-0">
+        <div class="flex items-center space-x-3">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path id="icono-success" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                <path id="icono-error" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span id="mensaje-texto" class="font-medium text-sm"></span>
+        </div>
+    </div>
+
+    <!-- Búsqueda -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+        <div class="relative">
+            <input type="text"
+                   id="busqueda-input"
+                   placeholder="Buscar por nombre o especialidad"
+                   class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all text-gray-700 placeholder-gray-400 text-sm">
+            <div class="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between p-4 border-b border-gray-100">
+            <h3 class="font-medium text-gray-800 text-base">Lista</h3>
+            <span class="bg-gray-800 text-white px-2 py-1 rounded text-xs font-medium">Fecha</span>
+        </div>
+
+        <div class="space-y-0" id="lista-doctores">
+            {# Asumimos que la ruta pasa la variable 'doctores' #}
+            {% for doctor in doctores %}
+            {% if doctor.user and doctor.especialidad %}
+            <div class="doctor-card border-b border-gray-100 last:border-b-0"
+                 data-doctor-id="{{ doctor.id }}"
+                 data-nombre="{{ doctor.user.name }}"
+                 data-especialidad="{{ doctor.especialidad.nombre }}">
+
+                <div class="p-4 flex items-center space-x-4">
+                    <!-- Avatar -->
+                    <div class="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </div>
+
+                    <!-- Información -->
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-medium text-gray-900 text-sm truncate">
+                            Dr. {{ doctor.user.name }}
+                        </h4>
+                        <p class="text-xs text-gray-500 uppercase tracking-wide font-medium mt-1">
+                            {{ doctor.especialidad.nombre }}
+                        </p>
+
+                        <div class="flex items-center mt-2 space-x-4 text-xs text-gray-600">
+                            <div class="flex items-center space-x-1">
+                                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                <span>VIRTUAL</span>
+                            </div>
+                            {% if doctor.precio_consulta %}
+                            <span class="font-medium">${{ "%d"|format(doctor.precio_consulta | int) }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if doctor.descripcion %}
+                        <p class="text-xs text-gray-500 mt-1 line-clamp-1">
+                            {{ doctor.descripcion[:80] ~ '...' if doctor.descripcion|length > 80 else doctor.descripcion }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Botón -->
+                    <button onclick="abrirModal({{ doctor.id }}, '{{ doctor.user.name | e }}', '{{ doctor.especialidad.nombre | e }}')"
+                            class="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium text-xs hover:bg-gray-900 transition-colors flex-shrink-0">
+                        PEDIR TURNO
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Estado vacío -->
+    <div id="estado-vacio" class="hidden text-center py-12">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-lg bg-gray-100 flex items-center justify-center">
+            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-800 mb-2">No se encontraron doctores</h3>
+        <p class="text-gray-500 text-sm">Intenta con otros términos de búsqueda</p>
+    </div>
+</div>
+
+<!-- Modal de Reserva -->
+<div id="modal-reserva" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm max-h-[99vh] overflow-hidden">
+
+        <!-- Header -->
+        <div class="bg-white p-4 border-b border-gray-100 relative">
+            <button onclick="cerrarModal()" class="absolute left-4 top-1/2 transform -translate-y-1/2">
+                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <h3 class="text-center font-medium text-gray-900 text-base">SELECCIONAR FECHA</h3>
+            <div class="text-center text-xs text-gray-500 mt-1">
+                <span class="text-gray-900">CONSULTA VIRTUAL</span> - <span id="modal-doctor-info">DR. MARTÍN DÍAZ</span>
+            </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="p-4 max-h-[calc(90vh)] overflow-y-auto">
+
+            <!-- Mes -->
+            <div class="text-center mb-4">
+                <h4 class="text-lg font-medium text-gray-900 uppercase tracking-wide">JULIO</h4>
+            </div>
+
+            <!-- Calendario -->
+            <div class="mb-6">
+                <!-- Días de la semana -->
+                <div class="grid grid-cols-7 gap-1 mb-2">
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">D</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">L</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">M</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">M</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">J</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">V</div>
+                    <div class="text-center text-xs font-medium text-gray-500 py-2">S</div>
+                </div>
+
+                <!-- Días del mes -->
+                <div id="calendario-dias" class="grid grid-cols-7 gap-1"></div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading-horarios" class="hidden text-center py-8">
+                <div class="w-8 h-8 mx-auto mb-3 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <svg class="animate-spin w-4 h-4 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </div>
+                <p class="text-gray-600 text-sm">Cargando horarios...</p>
+            </div>
+
+            <!-- Disponibilidad -->
+            <div id="disponibilidad-section" class="hidden">
+                <h5 class="font-medium text-gray-900 text-sm mb-3 uppercase tracking-wide">DISPONIBILIDAD</h5>
+                <div id="horarios-container" class="grid grid-cols-2 gap-2 mb-6"></div>
+            </div>
+
+            <!-- Sin horarios -->
+            <div id="sin-horarios" class="hidden text-center py-8">
+                <div class="w-12 h-12 mx-auto mb-3 rounded-lg bg-gray-100 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <p class="text-gray-600 text-sm">Sin horarios disponibles</p>
+                <p class="text-gray-400 text-xs">Seleccione otra fecha</p>
+            </div>
+
+            <!-- Botones de acción -->
+            <div id="botones-accion" class="hidden space-y-3">
+                <button onclick="confirmarReserva()"
+                        id="btn-confirmar"
+                        class="w-full bg-gray-800 text-white py-3 rounded-lg font-medium text-sm hover:bg-gray-900 transition-colors">
+                    CONFIRMAR
+                </button>
+
+                <button onclick="cerrarModal()"
+                        class="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors">
+                    CANCELAR
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+// Variables globales
+let doctorSeleccionado = null;
+let fechaSeleccionada = null;
+let horaSeleccionada = null;
+let procesando = false;
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    generarCalendario();
+    configurarBusqueda();
+});
+
+// Generar calendario
+function generarCalendario() {
+    const container = document.getElementById('calendario-dias');
+    container.innerHTML = '';
+
+    const fecha = new Date();
+    const primerDia = new Date(fecha.getFullYear(), fecha.getMonth(), 1);
+    const ultimoDia = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0);
+
+    // Días vacíos al inicio
+    for (let i = 0; i < primerDia.getDay(); i++) {
+        const div = document.createElement('div');
+        container.appendChild(div);
+    }
+
+    // Días del mes
+    for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
+        const fechaDia = new Date(fecha.getFullYear(), fecha.getMonth(), dia);
+        const fechaStr = fechaDia.toISOString().split('T')[0];
+
+        // Comparamos solo la fecha, no la hora
+        const hoy = new Date();
+        hoy.setHours(0,0,0,0);
+
+        const esHoy = fechaDia.getTime() === hoy.getTime();
+        const esPasado = fechaDia < hoy;
+
+        const button = document.createElement('button');
+        button.className = `w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+            esPasado ? 'text-gray-300 cursor-not-allowed' :
+            esHoy ? 'bg-red-500 text-white' :
+            'text-gray-700 hover:bg-gray-100'
+        }`;
+        button.textContent = dia;
+
+        if (!esPasado) {
+            button.onclick = () => seleccionarFecha(fechaStr, button);
+        }
+
+        container.appendChild(button);
+    }
+}
+
+// Configurar búsqueda
+function configurarBusqueda() {
+    const input = document.getElementById('busqueda-input');
+    input.addEventListener('input', filtrarDoctores);
+}
+
+// Filtrar doctores
+function filtrarDoctores() {
+    const busqueda = document.getElementById('busqueda-input').value.toLowerCase().trim();
+    const cards = document.querySelectorAll('.doctor-card');
+    const estadoVacio = document.getElementById('estado-vacio');
+    let doctoresVisibles = 0;
+
+    cards.forEach(card => {
+        const nombre = card.dataset.nombre.toLowerCase();
+        const especialidad = card.dataset.especialidad.toLowerCase();
+
+        if (!busqueda || nombre.includes(busqueda) || especialidad.includes(busqueda)) {
+            card.style.display = 'block';
+            doctoresVisibles++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    if (doctoresVisibles === 0) { // Mostramos solo si hay 0 visibles
+        estadoVacio.style.display = 'block';
+    } else {
+        estadoVacio.style.display = 'none';
+    }
+}
+
+// Abrir modal
+function abrirModal(doctorId, nombre, especialidad) {
+    doctorSeleccionado = doctorId;
+    fechaSeleccionada = null;
+    horaSeleccionada = null;
+
+    document.getElementById('modal-doctor-info').textContent = `DR. ${nombre.toUpperCase()}`;
+
+    // Resetear estados
+    document.getElementById('disponibilidad-section').style.display = 'none';
+    document.getElementById('sin-horarios').style.display = 'none';
+    document.getElementById('botones-accion').style.display = 'none';
+
+    // Resetear calendario
+    document.querySelectorAll('#calendario-dias button').forEach(btn => {
+        if (!btn.classList.contains('text-gray-300')) {
+            btn.className = btn.classList.contains('bg-red-500') ?
+                'w-8 h-8 rounded-lg text-sm font-medium transition-colors bg-red-500 text-white' :
+                'w-8 h-8 rounded-lg text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100';
+        }
+    });
+
+    document.getElementById('modal-reserva').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+// Cerrar modal
+function cerrarModal() {
+    document.getElementById('modal-reserva').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    doctorSeleccionado = null;
+    fechaSeleccionada = null;
+    horaSeleccionada = null;
+    procesando = false;
+}
+
+// Seleccionar fecha
+async function seleccionarFecha(fecha, buttonElement) {
+    fechaSeleccionada = fecha;
+    horaSeleccionada = null;
+
+    // Actualizar estilos del calendario
+    document.querySelectorAll('#calendario-dias button').forEach(btn => {
+        if (!btn.classList.contains('text-gray-300')) {
+            // Si el botón es el de "hoy" (rojo) Y no es el que clickeé, lo dejo rojo
+            if (btn.classList.contains('bg-red-500') && btn !== buttonElement) {
+                btn.className = 'w-8 h-8 rounded-lg text-sm font-medium transition-colors bg-red-500 text-white';
+            } else {
+                // Para todos los demás, los reseteo
+                btn.className = 'w-8 h-8 rounded-lg text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100';
+            }
+        }
+    });
+
+    // Pinto el botón seleccionado (a menos que sea "hoy", que ya está rojo)
+    if (!buttonElement.classList.contains('bg-red-500')) {
+        buttonElement.className = 'w-8 h-8 rounded-lg text-sm font-medium transition-colors bg-gray-900 text-white';
+    }
+
+    // Mostrar loading
+    document.getElementById('loading-horarios').style.display = 'block';
+    document.getElementById('disponibilidad-section').style.display = 'none';
+    document.getElementById('sin-horarios').style.display = 'none';
+    document.getElementById('botones-accion').style.display = 'none';
+
+    try {
+        // --- ¡TRADUCCIÓN CLAVE! ---
+        const url = '{{ url_for("doctor.obtener_horarios") }}';
+        const params = new URLSearchParams({
+            doctor_id: doctorSeleccionado,
+            fecha: fecha
+        });
+
+        const response = await fetch(url + '?' + params.toString());
+        const data = await response.json();
+
+        if (response.ok) {
+            mostrarHorarios(data.horarios || []);
+        } else {
+            throw new Error('Error al cargar horarios');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarMensaje('Error al cargar horarios disponibles', 'error');
+    } finally {
+        document.getElementById('loading-horarios').style.display = 'none';
+    }
+}
+
+// Mostrar horarios
+function mostrarHorarios(horarios) {
+    const container = document.getElementById('horarios-container');
+    container.innerHTML = '';
+
+    if (horarios.length === 0) {
+        document.getElementById('sin-horarios').style.display = 'block';
+        return;
+    }
+
+    horarios.forEach(horario => {
+        const button = document.createElement('button');
+        button.className = 'hora-btn py-3 px-4 rounded-lg text-sm font-medium transition-colors bg-gray-100 hover:bg-gray-200 text-gray-700';
+        button.onclick = () => seleccionarHora(horario.hora, button);
+        button.textContent = horario.hora;
+
+        container.appendChild(button);
+    });
+
+    document.getElementById('disponibilidad-section').style.display = 'block';
+}
+
+// Seleccionar hora
+function seleccionarHora(hora, buttonElement) {
+    horaSeleccionada = hora;
+
+    // Actualizar estilos de horarios
+    document.querySelectorAll('.hora-btn').forEach(btn => {
+        btn.className = 'hora-btn py-3 px-4 rounded-lg text-sm font-medium transition-colors bg-gray-100 hover:bg-gray-200 text-gray-700';
+    });
+
+    buttonElement.className = 'hora-btn py-3 px-4 rounded-lg text-sm font-medium transition-colors bg-gray-900 text-white';
+
+    // Mostrar botones de acción
+    document.getElementById('botones-accion').style.display = 'block';
+}
+
+// Confirmar reserva
+async function confirmarReserva() {
+    if (procesando) return;
+
+    procesando = true;
+    const btnConfirmar = document.getElementById('btn-confirmar');
+
+    btnConfirmar.innerHTML = `
+        <span class="flex items-center justify-center space-x-2">
+            <svg class="animate-spin w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span>Confirmando...</span>
+        </span>
+    `;
+    btnConfirmar.disabled = true;
+
+    try {
+        // --- ¡TRADUCCIÓN CLAVE! ---
+        const response = await fetch('{{ url_for("paciente.confirmar_turno") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+                // Quitamos el 'X-CSRF-TOKEN'
+            },
+            body: JSON.stringify({
+                doctor_id: doctorSeleccionado,
+                fecha: fechaSeleccionada,
+                hora: horaSeleccionada
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) { // Asumimos que la API de Flask devuelve {success: true, ...}
+            mostrarMensaje(data.message, 'success');
+            cerrarModal();
+
+            setTimeout(() => {
+                // --- ¡TRADUCCIÓN CLAVE! ---
+                window.location.href = '{{ url_for("paciente.mis_turnos") }}';
+            }, 2000);
+        } else {
+            mostrarMensaje(data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarMensaje('Error al reservar el turno', 'error');
+    } finally {
+        procesando = false;
+        btnConfirmar.innerHTML = 'CONFIRMAR';
+        btnConfirmar.disabled = false;
+    }
+}
+
+// Mostrar mensaje (el del layout ya lo hace, pero este es local)
+function mostrarMensaje(texto, tipo) {
+    const container = document.getElementById('mensaje-container');
+    const textoEl = document.getElementById('mensaje-texto');
+    const iconoSuccess = document.getElementById('icono-success');
+    const iconoError = document.getElementById('icono-error');
+
+    textoEl.textContent = texto;
+
+    if (tipo === 'success') {
+        container.className = 'bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg border-0';
+        iconoSuccess.style.display = 'block';
+        iconoError.style.display = 'none';
+    } else {
+        container.className = 'bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg border-0';
+        iconoSuccess.style.display = 'none';
+        iconoError.style.display = 'block';
+    }
+
+    container.style.display = 'block';
+
+    setTimeout(() => {
+        container.style.display = 'none';
+    }, 5000);
+}
+
+// Event listeners
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('modal-reserva');
+    if (e.target === modal) {
+        cerrarModal();
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModal();
+    }
+});
+</script>
+{% endblock %}
+
