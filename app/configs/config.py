@@ -1,6 +1,5 @@
 import os
 
-# Apunta al directorio raíz del proyecto (un nivel arriba de 'app')
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 # Esta es la ruta de respaldo (fallback)
 DEFAULT_DB_PATH = os.path.join(BASE_DIR, 'instance', 'database.sqlite')
