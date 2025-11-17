@@ -1,57 +1,9 @@
-{# --- ¡CORRECCIÓN CLAVE! --- #}
-{# Ahora esta plantilla HEREDA de app.html #}
 {% extends 'layouts/app.html' %}
 
-
-{# --- BLOQUE DE TÍTULO --- #}
-{# Define el título que 'app.html' usará #}
 {% block title %}{% block header_title %}Panel Paciente{% endblock %} - Sistema Médico{% endblock %}
 
-
-{# --- BLOQUE DE CONTENIDO --- #}
-{# Todo el contenido visible de la página va aquí #}
 {% block content %}
 <body class="bg-gray-50 min-h-screen">
-
-    <!-- Sistema de "Flash Messages" de Flask -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <div x-data="{
-                show: true,
-                type: '{{ messages[0][0] }}',
-                message: '{{ messages[0][1] }}'
-             }"
-             x-show="show"
-             x-init="setTimeout(() => show = false, 5000)"
-             x-transition
-             class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-full mx-4">
-
-            <div :class="{
-                'bg-green-600 border-green-500': type === 'success',
-                'bg-red-600 border-red-500': type === 'danger',
-                'bg-amber-600 border-amber-500': type === 'warning',
-                'bg-gray-900 border-gray-800': type === 'info'
-            }" class="text-white px-4 py-3 rounded-lg shadow-lg border">
-
-                <div class="flex items-center space-x-3">
-                    <!-- Icono (simplificado) -->
-                    <div class="flex-shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    </div>
-                    <p class="font-medium text-sm flex-1" x-text="message"></p>
-                    <button @click="show = false" class="ml-2 text-green-100 hover:text-white flex-shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-    {% endwith %}
-
     <!-- Header Principal -->
     <div class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
         <div class="max-w-md mx-auto px-4 py-3">
@@ -69,10 +21,6 @@
                 {% endif %}
 
                 <h1 class="text-lg font-semibold text-gray-800 text-center flex-1">
-                    <!--
-                      --- ¡LA CORRECCIÓN ESTÁ AQUÍ! ---
-                      Este es el ÚNICO bloque 'header'.
-                    -->
                     {% block header %}Panel Paciente{% endblock %}
                 </h1>
 
@@ -93,9 +41,6 @@
 </body>
 {% endblock %}
 
-
-{# --- BLOQUE DE ESTILOS --- #}
-{# Todo el CSS personalizado va aquí #}
 {% block styles %}
     <style>
         .safe-area-pb {
@@ -138,9 +83,6 @@
     </style>
 {% endblock %}
 
-
-{# --- BLOQUE DE SCRIPTS --- #}
-{# Todo el JavaScript personalizado va aquí #}
 {% block scripts %}
     <script>
         // Manejar estados de carga
@@ -171,7 +113,7 @@
 
             // Mejorar navegación back
             window.addEventListener('popstate', function(e) {
-                // Aquí puedes agregar lógica adicional si es necesario
+                // Navegacion
             });
         });
 
