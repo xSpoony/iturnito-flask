@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Frontend para iTurnito (Flask)",
   "scripts": {
-    "dev": "npx tailwindcss -i ./static/css/input.css -o ./static/css/app.css --watch",
-    "build": "npx tailwindcss -i ./static/css/input.css -o ./static/css/app.css --minify"
+    "dev": "npx tailwindcss -i app/static/css/input.css -o app/static/css/app.css --watch",
+    "build": "npx tailwindcss -i app/static/css/input.css -o app/static/css/app.css --minify"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
