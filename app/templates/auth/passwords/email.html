@@ -7,7 +7,6 @@
 
         <!--
           NOTA: La ruta 'auth.password_request' no existe todavía.
-          Deberás crearla en 'auth_routes.py' para que funcione.
         -->
         <form class="mt-8 space-y-6" action="{{ url_for('auth.password_request') }}" method="POST">
             <input type="email" name="email" placeholder="Tu email" required
