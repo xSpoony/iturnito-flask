@@ -1,9 +1,5 @@
 # iTurnito - Sistema de Gestión de Turnos Médicos
 
-## ⚠️ DISCLAIMER IMPORTANTE
-
-**Este es un proyecto académico de BAJA CALIDAD desarrollado rápidamente para aplicar wireframes como parte de un trabajo universitario.**
-
 ### 🚨 Advertencias:
 
   - **El código es de mala calidad** - fue desarrollado con fines puramente académicos
@@ -35,8 +31,10 @@ Este proyecto fue creado como parte de un trabajo práctico universitario para:
   - **SQLAlchemy** - ORM para la base de datos
   - **Flask-Migrate (Alembic)** - Manejo de migraciones
   - **SQLite** - Base de datos local
+  - **PostgreSQL** - Base de datos online
   - **Alpine.js** - Framework de JavaScript
   - **Tailwind CSS** - Estilos
+  - **Gunicorn** - Servidor WSGI para deploy
 
 ## 📋 Funcionalidades
 
@@ -53,7 +51,6 @@ Sistema básico de gestión de turnos médicos que incluye:
 
     ```bash
     git clone https://github.com/xSpoony/iturnito-flask.git
-    cd iturnito
     ```
 
 2.  **Crear y activar un entorno virtual:**
@@ -72,29 +69,19 @@ Sistema básico de gestión de turnos médicos que incluye:
 4.  **Instalar dependencias de JS (para Tailwind/Alpine):**
 
     ```bash
-    cd app
     npm install
-    cd ..
+    npm run build
     ```
 
 5.  **Ejecutar migraciones de la base de datos:**
 
     ```bash
-    # (Desde el directorio raíz 'iturnito')
     flask db upgrade
     ```
 
-6.  **Iniciar el compilador de Tailwind (en una terminal separada):**
+6.  **Iniciar el servidor de Flask:**
 
     ```bash
-    cd app
-    npm run dev
-    ```
-
-7.  **Iniciar el servidor de Flask (en otra terminal):**
-
-    ```bash
-    # (Desde el directorio raíz 'iturnito')
     flask run
     ```
 
