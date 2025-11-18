@@ -1,0 +1,17 @@
+[build]
+builder = "NIXPACKS"
+
+[build.env]
+NODE_ENV = "production"
+
+[build.nixpacks]
+languages = ["python", "node"]
+
+[build.commands]
+build = [
+  "npm install",
+  "npm run build"
+]
+
+[start]
+command = "flask db upgrade && gunicorn --workers 4 --bind 0.0.0.0:$PORT wsgi:app"
