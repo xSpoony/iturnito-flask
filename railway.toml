@@ -1,17 +1,18 @@
 [build]
 builder = "NIXPACKS"
 
-[build.env]
-NODE_ENV = "production"
-
 [build.nixpacks]
 languages = ["python", "node"]
 
-[build.commands]
-build = [
+[build.plan]
+providers = ["python", "node"]
+
+[build.steps]
+steps = [
   "npm install",
-  "npm run build"
+  "npm run build",
+  "pip install -r requirements.txt"
 ]
 
 [start]
-command = "flask db upgrade && gunicorn --workers 4 --bind 0.0.0.0:$PORT wsgi:app"
+command = "gunicorn --workers 4 --bind 0.0.0.0:$PORT wsgi:app"
