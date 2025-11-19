@@ -3,20 +3,16 @@
 {% block header %}Configurar Horarios{% endblock %}
 
 {% block main_content %}
-<div x-data='{ message: null, type: null }'
-     @show-notification.window="message = $event.detail.message; type = $event.detail.type; setTimeout(() => { message = null }, 4000);"
-     x-show="message"
-     x-transition:enter="transition ease-out duration-300"
-     x-transition:enter-start="opacity-0 transform translate-y-2"
-     x-transition:enter-end="opacity-100 transform translate-y-0"
-     x-transition:leave="transition ease-in duration-300"
-     x-transition:leave-start="opacity-100 transform translate-y-0"
-     x-transition:leave-end="opacity-0 transform translate-y-2"
-     :class="{'bg-green-600': type === 'success', 'bg-red-600': type === 'error'}"
-     class="fixed top-4 right-4 text-white px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm">
-    <span x-text="message"></span>
-</div>
 
+<div id="mensaje-container" class="hidden text-white px-4 py-3 rounded-lg shadow-lg border-0 mb-4">
+    <div class="flex items-center space-x-3">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path id="icono-success" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            <path id="icono-error" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span id="mensaje-texto" class="font-medium text-sm"></span>
+    </div>
+</div>
 <div x-data='horariosDoctor({{ config_json | safe }}, {{ horarios_json | safe }})' class="space-y-6">
     <div class="bg-white rounded-lg shadow-sm border p-4">
         <h3 class="font-medium text-gray-900 mb-4">Configuración General</h3>
@@ -134,6 +130,33 @@ function horariosDoctor(configInicial, diasSemanaInicial) {
         { codigo: 'domingo', nombre: 'Domingo', activo: false, bloques: [{ inicio: '09:00', fin: '13:00' }] }
     ];
 
+    // --- Función de Notificación Centralizada (IDÉNTICA a la del paciente) ---
+    function mostrarMensaje(texto, tipo) {
+        const container = document.getElementById('mensaje-container');
+        const textoEl = document.getElementById('mensaje-texto');
+        const iconoSuccess = document.getElementById('icono-success');
+        const iconoError = document.getElementById('icono-error');
+
+        textoEl.textContent = texto;
+
+        if (tipo === 'success') {
+            container.className = 'bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg border-0 mb-4';
+            iconoSuccess.style.display = 'block';
+            iconoError.style.display = 'none';
+        } else {
+            container.className = 'bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg border-0 mb-4';
+            iconoSuccess.style.display = 'none';
+            iconoError.style.display = 'block';
+        }
+
+        container.style.display = 'block';
+
+        setTimeout(() => {
+            container.style.display = 'none';
+        }, 5000);
+    }
+    // --------------------------------------------------------------------------
+
     return {
         // Usa los datos de Flask o un valor por defecto
         configuracion: configInicial || { duracion_turno: 30, modalidad: "presencial", precio_consulta: 0 },
@@ -144,12 +167,6 @@ function horariosDoctor(configInicial, diasSemanaInicial) {
             motivo: ''
         },
         
-        // Función para mostrar la notificación
-        mostrarNotificacion(texto, tipo) {
-            // Utilizamos el $dispatch para enviar el mensaje al componente padre
-            this.$dispatch('show-notification', { message: texto, type: tipo });
-        },
-
         init() {
             this.cargarExcepciones();
         },
@@ -183,13 +200,13 @@ function horariosDoctor(configInicial, diasSemanaInicial) {
                 });
                 const data = await response.json();
                 if (data.success) {
-                    this.mostrarNotificacion('Configuración guardada correctamente', 'success');
+                    mostrarMensaje('Configuración guardada correctamente', 'success');
                 } else {
-                    this.mostrarNotificacion(data.message || 'Error al guardar la configuración', 'error');
+                    mostrarMensaje(data.message || 'Error al guardar la configuración', 'error');
                 }
             } catch (e) {
                 console.error("Error al guardar config", e);
-                this.mostrarNotificacion('Error de red al guardar la configuración', 'error');
+                mostrarMensaje('Error de red al guardar la configuración', 'error');
             }
         },
 
@@ -202,13 +219,13 @@ function horariosDoctor(configInicial, diasSemanaInicial) {
                 });
                 const data = await response.json();
                 if (data.success) {
-                    this.mostrarNotificacion('Horarios guardados correctamente', 'success');
+                    mostrarMensaje('Horarios guardados correctamente', 'success');
                 } else {
-                    this.mostrarNotificacion(data.message || 'Error al guardar los horarios', 'error');
+                    mostrarMensaje(data.message || 'Error al guardar los horarios', 'error');
                 }
             } catch (e) {
                 console.error("Error al guardar horarios", e);
-                this.mostrarNotificacion('Error de red al guardar los horarios', 'error');
+                mostrarMensaje('Error de red al guardar los horarios', 'error');
             }
         },
 
@@ -234,13 +251,13 @@ function horariosDoctor(configInicial, diasSemanaInicial) {
                 });
                 const data = await response.json();
                 if (data.success) {
-                    this.mostrarNotificacion('Excepciones guardadas', 'success');
+                    mostrarMensaje('Excepciones guardadas', 'success');
                 } else {
-                    this.mostrarNotificacion(data.message || 'Error al guardar las excepciones', 'error');
+                    mostrarMensaje(data.message || 'Error al guardar las excepciones', 'error');
                 }
             } catch (e) {
                 console.error("Error al guardar excepciones", e);
-                this.mostrarNotificacion('Error de red al guardar las excepciones', 'error');
+                mostrarMensaje('Error de red al guardar las excepciones', 'error');
             }
         }
     }
