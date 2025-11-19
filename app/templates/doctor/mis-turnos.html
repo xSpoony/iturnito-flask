@@ -9,12 +9,12 @@
         <div class="flex items-center justify-between mb-4">
             <h3 class="font-medium text-gray-900">Filtrar Turnos</h3>
             <div class="flex items-center space-x-2">
-                <button @click="vista = 'dia'"
+                <button @click="vista = 'dia'; cargarTurnos();"
                         :class="vista === 'dia' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'"
                         class="px-3 py-1 rounded text-sm">
                     Día
                 </button>
-                <button @click="vista = 'semana'"
+                <button @click="vista = 'semana'; cargarTurnos();"
                         :class="vista === 'semana' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-700'"
                         class="px-3 py-1 rounded text-sm">
                     Semana
@@ -38,25 +38,25 @@
             </button>
         </div>
 
-        <div class="flex space-x-2">
+        <div class="flex space-x-2 overflow-x-auto pb-2">
             <button @click="filtroEstado = 'todos'; cargarTurnos();"
                     :class="filtroEstado === 'todos' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'"
-                    class="px-3 py-1 rounded text-sm">
+                    class="px-3 py-1 rounded text-sm flex-shrink-0">
                 Todos
             </button>
             <button @click="filtroEstado = 'pendiente'; cargarTurnos();"
                     :class="filtroEstado === 'pendiente' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700'"
-                    class="px-3 py-1 rounded text-sm">
+                    class="px-3 py-1 rounded text-sm flex-shrink-0">
                 Pendientes
             </button>
             <button @click="filtroEstado = 'completado'; cargarTurnos();"
                     :class="filtroEstado === 'completado' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'"
-                    class="px-3 py-1 rounded text-sm">
+                    class="px-3 py-1 rounded text-sm flex-shrink-0">
                 Completados
             </button>
             <button @click="filtroEstado = 'cancelado'; cargarTurnos();"
                     :class="filtroEstado === 'cancelado' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'"
-                    class="px-3 py-1 rounded text-sm">
+                    class="px-3 py-1 rounded text-sm flex-shrink-0">
                 Cancelados
             </button>
         </div>
@@ -128,7 +128,7 @@
                               x-model="notas"></textarea>
                 </div>
 
-                <div class="flex justify-between items-center">
+                <div class="flex justify-between items-center flex-wrap gap-3">
                     <div class="flex space-x-2">
                         {% if turno.estado == 'pendiente' %}
                             <button @click="completarTurno({{ turno.id }})"
@@ -142,7 +142,7 @@
                         {% endif %}
                     </div>
                     
-                    <div class="flex space-x-2">
+                    <div class="flex space-x-2 flex-wrap gap-2">
                         <button @click="guardarNotas({{ turno.id }}, notas)"
                                 class="px-4 py-2 bg-gray-900 text-white rounded hover:bg-blue-700 transition text-sm">
                             Guardar Notas
@@ -164,114 +164,20 @@
     <div class="flex justify-center">
         </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.7/dayjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.7/plugin/updateLocale.js"></script>
-<script>
-// Configurar Day.js en español
-dayjs.extend(dayjs_plugin_updateLocale);
-dayjs.updateLocale('en', {
-  months: [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
-    "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-  ],
-  weekdays: [
-    "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"
-  ],
-  weekdaysShort: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
-});
-
-function turnosDoctor() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const fechaParam = urlParams.get('fecha');
-
-    return {
-        vista: urlParams.get('vista') || 'dia',
-        fechaActual: fechaParam ? dayjs(fechaParam) : dayjs(),
-        filtroEstado: urlParams.get('estado') || 'todos',
-
-        fechaAnterior() {
-            if (this.vista === 'dia') {
-                this.fechaActual = this.fechaActual.subtract(1, 'day');
-            } else {
-                this.fechaActual = this.fechaActual.subtract(1, 'week');
-            }
-            this.cargarTurnos();
-        },
-
-        fechaSiguiente() {
-            if (this.vista === 'dia') {
-                this.fechaActual = this.fechaActual.add(1, 'day');
-            } else {
-                this.fechaActual = this.fechaActual.add(1, 'week');
-            }
-            this.cargarTurnos();
-        },
-
-        cargarTurnos() {
-            const params = new URLSearchParams();
-            params.set('fecha', this.fechaActual.format('YYYY-MM-DD'));
-            params.set('vista', this.vista);
-            params.set('estado', this.filtroEstado);
-            window.location.search = params.toString();
-        },
-
-        async _enviarAccion(url, confirmacion, datos = null) {
-            if (confirmacion && !confirm(confirmacion)) {
-                return;
-            }
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: datos ? JSON.stringify(datos) : null
-                });
-                const data = await response.json();
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.message || 'Ocurrió un error.');
-                }
-            } catch(e) {
-                alert('Error de red al realizar la acción.');
-            }
-        },
-
-        completarTurno(turnoId) {
-            this._enviarAccion('{{ url_for("doctor.completar_turno", turno_id=0) }}'.replace('0', turnoId), 
-                               '¿Marcar este turno como completado?');
-        },
-
-        cancelarTurno(turnoId) {
-            this._enviarAccion('{{ url_for("doctor.cancelar_turno", turno_id=0) }}'.replace('0', turnoId), 
-                               '¿Cancelar este turno?');
-        },
-
-        async guardarNotas(turnoId, notas) {
-            try {
-                const url = '{{ url_for("doctor.guardar_notas", turno_id=0) }}'.replace('0', turnoId);
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ notas: notas || '' })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    alert('Notas guardadas correctamente');
-                } else {
-                     alert(data.message || 'Error al guardar notas.');
-                }
-            } catch (e) {
-                alert('Error de red al guardar notas.');
-            }
-        },
-
-        iniciarVideoLlamada(turnoId) {
-            const url = '{{ url_for("doctor.iniciar_videollamada", turno_id=0) }}'.replace('0', turnoId);
-            window.open(url, '_blank');
-        }
-    }
-}
-</script>
 {% endblock %}
 
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.7/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.7/plugin/updateLocale.js"></script>
+
+<script>
+    window.API_URLS_TURNOS = {
+        COMPLETAR_TURNO: "{{ url_for('doctor.completar_turno', turno_id=0) }}",
+        CANCELAR_TURNO: "{{ url_for('doctor.cancelar_turno', turno_id=0) }}",
+        GUARDAR_NOTAS: "{{ url_for('doctor.guardar_notas', turno_id=0) }}",
+        INICIAR_VIDEOLLAMADA: "{{ url_for('doctor.iniciar_videollamada', turno_id=0) }}"
+    };
+</script>
+
+<script src="{{ url_for('static', filename='js/turnos.js') }}"></script>
+{% endblock %}
