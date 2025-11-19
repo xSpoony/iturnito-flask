@@ -238,20 +238,16 @@ function turnosDoctor() {
         },
 
         completarTurno(turnoId) {
-            // ¡TRADUCIDO! Llama a la ruta correcta
             this._enviarAccion('{{ url_for("doctor.completar_turno", turno_id=0) }}'.replace('0', turnoId), 
                                '¿Marcar este turno como completado?');
         },
 
         cancelarTurno(turnoId) {
-            // ¡TRADUCIDO! Llama a la ruta correcta
             this._enviarAccion('{{ url_for("doctor.cancelar_turno", turno_id=0) }}'.replace('0', turnoId), 
                                '¿Cancelar este turno?');
         },
 
         async guardarNotas(turnoId, notas) {
-            // (Esta función usa un alert() en lugar de _enviarAccion para 
-            // no recargar la página, lo cual está bien)
             try {
                 const url = '{{ url_for("doctor.guardar_notas", turno_id=0) }}'.replace('0', turnoId);
                 const response = await fetch(url, {

@@ -3,7 +3,6 @@
 {% block header %}Configurar Horarios{% endblock %}
 
 {% block main_content %}
-{# ¡LA CORRECCIÓN ESTÁ AQUÍ! Cambiamos las comillas de x-data a comillas simples ' #}
 <div x-data='horariosDoctor({{ config_json | safe }}, {{ horarios_json | safe }})' class="space-y-6">
     <div class="bg-white rounded-lg shadow-sm border p-4">
         <h3 class="font-medium text-gray-900 mb-4">Configuración General</h3>
@@ -130,7 +129,7 @@ function horariosDoctor(configInicial, diasSemanaInicial) {
         },
 
         init() {
-            // Ya no cargamos los horarios aquí, se inyectan desde Flask
+            // Se inyectan desde Flask
             this.cargarExcepciones();
         },
 

@@ -348,7 +348,6 @@ async function seleccionarFecha(fecha, buttonElement) {
     document.getElementById('botones-accion').style.display = 'none';
 
     try {
-        // --- ¡TRADUCCIÓN CLAVE! ---
         const url = '{{ url_for("doctor.obtener_horarios") }}';
         const params = new URLSearchParams({
             doctor_id: doctorSeleccionado,
@@ -426,13 +425,11 @@ async function confirmarReserva() {
     btnConfirmar.disabled = true;
 
     try {
-        // --- ¡TRADUCCIÓN CLAVE! ---
         const response = await fetch('{{ url_for("paciente.confirmar_turno") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
-                // Quitamos el 'X-CSRF-TOKEN'
             },
             body: JSON.stringify({
                 doctor_id: doctorSeleccionado,
@@ -448,7 +445,6 @@ async function confirmarReserva() {
             cerrarModal();
 
             setTimeout(() => {
-                // --- ¡TRADUCCIÓN CLAVE! ---
                 window.location.href = '{{ url_for("paciente.mis_turnos") }}';
             }, 2000);
         } else {
