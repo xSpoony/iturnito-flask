@@ -1,13 +1,14 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
+from sqlalchemy import distinct
 import datetime
 
-# --- Importaciones de Modelos y DB ---
 from app.models.user import User
 from app.models.doctor import Doctor
 from app.models.turno import Turno
 from app.models.paciente import Paciente
+from app.models.horario_disponible import HorarioDisponible
 from app import db
 
 
@@ -129,12 +130,40 @@ def mis_turnos():
 @paciente_bp.route('/reservar-turno')
 @login_required
 def reservar_turno():
+    
+    hoy = datetime.date.today()
+    current_year = hoy.year
+    current_month = hoy.month
+
     doctores = Doctor.query.options(
         joinedload(Doctor.user),
-        joinedload(Doctor.especialidad)
+        joinedload(Doctor.especialidad),
+        joinedload(Doctor.configuracion),
     ).all()
-    return render_template('paciente/reservar-turno.html', doctores=doctores)
-
+    
+    doctores_con_disponibilidad = []
+    for doctor in doctores:
+        config = doctor.configuracion
+        if config:
+            modalidad_final = config.modalidad
+            precio_final = config.precio_consulta
+        else:
+            modalidad_final = 'presencial' 
+            precio_final = 0.0
+        
+        dias_disponibles = obtener_dias_disponibles_del_mes(
+            doctor.id, 
+            current_year, 
+            current_month
+        )
+        
+        doctor.modalidad = modalidad_final
+        doctor.precio_consulta = precio_final
+        doctor.dias_disponibles_mes_actual = dias_disponibles 
+        
+        doctores_con_disponibilidad.append(doctor)
+    
+    return render_template('paciente/reservar-turno.html', doctores=doctores_con_disponibilidad)
 
 # --- Confirmar Turno (POST API) ---
 @paciente_bp.route('/confirmar-turno', methods=['POST'])
@@ -142,7 +171,13 @@ def reservar_turno():
 def confirmar_turno():
     try:
         data = request.json
-        doctor_id = data.get('doctor_id')
+        doctor_id_recibido = data.get('doctor_id')
+        
+        if isinstance(doctor_id_recibido, dict) and 'id' in doctor_id_recibido:
+             doctor_id_final = doctor_id_recibido.get('id')
+        else:
+             doctor_id_final = doctor_id_recibido 
+        
         fecha_str = data.get('fecha')
         hora_str = data.get('hora')
         fecha_hora_str = f"{fecha_str} {hora_str}"
@@ -150,8 +185,8 @@ def confirmar_turno():
         
         nuevo_turno = Turno(
             fecha_hora=fecha_hora_obj,
-            estado='pendiente', # Estado por defecto
-            doctor_id=doctor_id,
+            estado='pendiente',
+            doctor_id=doctor_id_final, 
             paciente_id=current_user.paciente_perfil.id
         )
         db.session.add(nuevo_turno)
@@ -184,3 +219,40 @@ def cancelar_turno(turno_id):
     flash('Turno cancelado exitosamente.', 'success')
     return redirect(url_for('paciente.mis_turnos'))
 
+def obtener_dias_disponibles_del_mes(doctor_id, year, month):
+    #Calcula qué días del mes tienen al menos un horario base configurado.
+    
+    dias_semana_con_horario = db.session.query(
+        distinct(HorarioDisponible.dia_semana)
+    ).filter(
+        HorarioDisponible.doctor_id == doctor_id
+    ).all()
+    
+    dias_semana_set = {d[0] for d in dias_semana_con_horario} 
+
+    if not dias_semana_set:
+        return []
+    
+    dias_disponibles = set()
+    
+    try:
+        inicio_mes = datetime.date(year, month, 1)
+        if month == 12:
+            fin_rango = datetime.date(year + 1, 1, 1)
+        else:
+            fin_rango = datetime.date(year, month + 1, 1)
+    except ValueError:
+        return []
+
+    fecha_actual = inicio_mes
+    hoy = datetime.date.today()
+    
+    while fecha_actual < fin_rango:
+        # Solo incluimos días futuros o el día actual
+        if fecha_actual >= hoy: 
+            if fecha_actual.weekday() in dias_semana_set:
+                dias_disponibles.add(fecha_actual.day)
+        
+        fecha_actual += datetime.timedelta(days=1)
+        
+    return sorted(list(dias_disponibles))

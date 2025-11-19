@@ -39,13 +39,15 @@
         </div>
 
         <div class="space-y-0" id="lista-doctores">
-            {# Asumimos que la ruta pasa la variable 'doctores' #}
             {% for doctor in doctores %}
             {% if doctor.user and doctor.especialidad %}
             <div class="doctor-card border-b border-gray-100 last:border-b-0"
-                 data-doctor-id="{{ doctor.id }}"
-                 data-nombre="{{ doctor.user.name }}"
-                 data-especialidad="{{ doctor.especialidad.nombre }}">
+                data-doctor-id="{{ doctor.id }}"
+                data-nombre="{{ doctor.user.name }}"
+                data-especialidad="{{ doctor.especialidad.nombre }}"
+                data-dias-disponibles="{{ doctor.dias_disponibles_mes_actual | tojson }}"
+                data-modalidad="{{ doctor.modalidad }}"
+                data-precio="{{ doctor.precio_consulta }}">
 
                 <div class="p-4 flex items-center space-x-4">
                     <!-- Avatar -->
@@ -67,7 +69,7 @@
                         <div class="flex items-center mt-2 space-x-4 text-xs text-gray-600">
                             <div class="flex items-center space-x-1">
                                 <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                <span>VIRTUAL</span>
+                                <span>{{ doctor.modalidad | upper }}</span>
                             </div>
                             {% if doctor.precio_consulta %}
                             <span class="font-medium">${{ "%d"|format(doctor.precio_consulta | int) }}</span>
@@ -82,8 +84,7 @@
                     </div>
 
                     <!-- Botón -->
-                    <button onclick="abrirModal({{ doctor.id }}, '{{ doctor.user.name | e }}', '{{ doctor.especialidad.nombre | e }}')"
-                            class="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium text-xs hover:bg-gray-900 transition-colors flex-shrink-0">
+<button onclick="abrirModal({{ doctor.id }}, '{{ doctor.user.name | e }}', '{{ doctor.especialidad.nombre | e }}')"                            class="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium text-xs hover:bg-gray-900 transition-colors flex-shrink-0">
                         PEDIR TURNO
                     </button>
                 </div>
@@ -196,19 +197,20 @@
 {% block scripts %}
 <script>
 // Variables globales
-let doctorSeleccionado = null;
+let doctorSeleccionado = null; 
 let fechaSeleccionada = null;
 let horaSeleccionada = null;
 let procesando = false;
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', function() {
-    generarCalendario();
+    generarCalendario(new Set()); 
     configurarBusqueda();
 });
 
+
 // Generar calendario
-function generarCalendario() {
+function generarCalendario(diasDisponibles = new Set()) {
     const container = document.getElementById('calendario-dias');
     container.innerHTML = '';
 
@@ -216,7 +218,6 @@ function generarCalendario() {
     const primerDia = new Date(fecha.getFullYear(), fecha.getMonth(), 1);
     const ultimoDia = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0);
 
-    // Días vacíos al inicio
     for (let i = 0; i < primerDia.getDay(); i++) {
         const div = document.createElement('div');
         container.appendChild(div);
@@ -226,23 +227,28 @@ function generarCalendario() {
     for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
         const fechaDia = new Date(fecha.getFullYear(), fecha.getMonth(), dia);
         const fechaStr = fechaDia.toISOString().split('T')[0];
-
-        // Comparamos solo la fecha, no la hora
         const hoy = new Date();
         hoy.setHours(0,0,0,0);
 
         const esHoy = fechaDia.getTime() === hoy.getTime();
         const esPasado = fechaDia < hoy;
+        const estaDisponible = diasDisponibles.has(dia); 
+        const isDisabled = esPasado || !estaDisponible;
 
         const button = document.createElement('button');
+        
         button.className = `w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-            esPasado ? 'text-gray-300 cursor-not-allowed' :
-            esHoy ? 'bg-red-500 text-white' :
-            'text-gray-700 hover:bg-gray-100'
+            isDisabled ? 
+                'text-gray-300 cursor-not-allowed' : 
+            esHoy ? 
+                'bg-red-500 text-white' : 
+                'text-gray-700 hover:bg-gray-100' 
         }`;
+        
         button.textContent = dia;
+        button.disabled = isDisabled; 
 
-        if (!esPasado) {
+        if (!isDisabled) {
             button.onclick = () => seleccionarFecha(fechaStr, button);
         }
 
@@ -284,25 +290,33 @@ function filtrarDoctores() {
 
 // Abrir modal
 function abrirModal(doctorId, nombre, especialidad) {
-    doctorSeleccionado = doctorId;
+    
+    const doctorCard = document.querySelector(`.doctor-card[data-doctor-id="${doctorId}"]`);
+    let diasDisponiblesStr = doctorCard.dataset.diasDisponibles;
+    let diasDisponiblesArray = JSON.parse(diasDisponiblesStr); 
+    const modalidad = doctorCard.dataset.modalidad;
+    const precio = parseFloat(doctorCard.dataset.precio) || 0.0;
+
+    doctorSeleccionado = {
+        id: doctorId,
+        nombre: nombre,
+        modalidad: modalidad, 
+        precio: precio,       
+        diasDisponibles: new Set(diasDisponiblesArray) 
+    }; 
+    
     fechaSeleccionada = null;
     horaSeleccionada = null;
 
-    document.getElementById('modal-doctor-info').textContent = `DR. ${nombre.toUpperCase()}`;
-
-    // Resetear estados
+    document.getElementById('modal-doctor-info').innerHTML = `
+        <span class="text-gray-900">${modalidad.toUpperCase()}</span> 
+        ${precio > 0 ? ' - $' + precio.toFixed(0) : ''}
+    `;
     document.getElementById('disponibilidad-section').style.display = 'none';
     document.getElementById('sin-horarios').style.display = 'none';
     document.getElementById('botones-accion').style.display = 'none';
 
-    // Resetear calendario
-    document.querySelectorAll('#calendario-dias button').forEach(btn => {
-        if (!btn.classList.contains('text-gray-300')) {
-            btn.className = btn.classList.contains('bg-red-500') ?
-                'w-8 h-8 rounded-lg text-sm font-medium transition-colors bg-red-500 text-white' :
-                'w-8 h-8 rounded-lg text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100';
-        }
-    });
+    generarCalendario(doctorSeleccionado.diasDisponibles); 
 
     document.getElementById('modal-reserva').style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -349,8 +363,9 @@ async function seleccionarFecha(fecha, buttonElement) {
 
     try {
         const url = '{{ url_for("doctor.obtener_horarios") }}';
+        
         const params = new URLSearchParams({
-            doctor_id: doctorSeleccionado,
+            doctor_id: doctorSeleccionado.id, 
             fecha: fecha
         });
 
@@ -440,7 +455,7 @@ async function confirmarReserva() {
 
         const data = await response.json();
 
-        if (data.success) { // Asumimos que la API de Flask devuelve {success: true, ...}
+        if (data.success) {
             mostrarMensaje(data.message, 'success');
             cerrarModal();
 
@@ -460,7 +475,7 @@ async function confirmarReserva() {
     }
 }
 
-// Mostrar mensaje (el del layout ya lo hace, pero este es local)
+// Mostrar mensaje
 function mostrarMensaje(texto, tipo) {
     const container = document.getElementById('mensaje-container');
     const textoEl = document.getElementById('mensaje-texto');

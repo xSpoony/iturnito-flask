@@ -54,10 +54,8 @@ def dashboard():
 
 @doctor_bp.route('/mis-turnos')
 def mis_turnos():
-    """Página 'Mis Turnos' del doctor con filtro (¡LÓGICA CORREGIDA!)"""
     
-    # --- ¡CORRECCIÓN! Solo tomamos la fecha si SÍ viene en la URL ---
-    fecha_str = request.args.get('fecha') # Ya no tiene valor por defecto
+    fecha_str = request.args.get('fecha') 
     vista = request.args.get('vista', 'dia')
     estado = request.args.get('estado', 'todos')
     
@@ -67,13 +65,10 @@ def mis_turnos():
         Turno.doctor_id == current_user.doctor_perfil.id
     )
 
-    # 1. Filtro de Estado
     if estado != 'todos':
         query = query.filter(Turno.estado == estado)
 
-    # 2. Filtro de Fecha (¡CORREGIDO!)
     if fecha_str:
-        # Si SÍ hay fecha, filtramos por día/semana
         fecha_obj = datetime.date.fromisoformat(fecha_str)
         if vista == 'dia':
             query = query.filter(db.func.date(Turno.fecha_hora) == fecha_obj)
@@ -85,13 +80,8 @@ def mis_turnos():
                 datetime.datetime.combine(fin_semana, datetime.time.max)
             ))
     else:
-        # Si NO hay fecha, mostramos por defecto:
-        # - Todos los 'pendientes' si el filtro es 'todos' o 'pendiente'
-        # - O todos los 'completados' / 'cancelados' si el filtro es ese.
         if estado == 'todos' or estado == 'pendiente':
              query = query.filter(Turno.estado == 'pendiente', Turno.fecha_hora >= datetime.datetime.now())
-        # (Si el estado es 'completado' o 'cancelado', la falta de filtro de fecha
-        #  simplemente mostrará TODOS los de ese estado)
     
     turnos = query.order_by(Turno.fecha_hora.asc()).all()
     return render_template('doctor/mis-turnos.html', turnos=turnos)
@@ -230,45 +220,59 @@ def obtener_excepciones():
 def guardar_excepciones():
     return jsonify({'success': True, 'message': 'Excepciones no implementadas'})
 
+
 @doctor_bp.route('/api/horarios', methods=['GET'])
 def obtener_horarios():
     try:
         doctor_id = request.args.get('doctor_id')
         fecha_str = request.args.get('fecha')
+        
         if not doctor_id or not fecha_str:
             return jsonify({'error': 'Faltan parámetros'}), 400
+        
         fecha_obj = datetime.date.fromisoformat(fecha_str)
         dia_semana = fecha_obj.weekday()
+        
         horarios_base = HorarioDisponible.query.filter_by(doctor_id=doctor_id, dia_semana=dia_semana).all()
         if not horarios_base:
             return jsonify({'horarios': []}), 200
+        
         config = ConfiguracionHorario.query.filter_by(doctor_id=doctor_id).first()
         duracion_min = config.duracion_turno if config else 30
         duracion_turno = datetime.timedelta(minutes=duracion_min)
-        turnos_reservados = Turno.query.filter(Turno.doctor_id == doctor_id, db.func.date(Turno.fecha_hora) == fecha_obj).all()
+        
+        turnos_reservados = Turno.query.filter(
+            Turno.doctor_id == doctor_id, 
+            db.func.date(Turno.fecha_hora) == fecha_obj,
+            Turno.estado.in_(['pendiente', 'confirmado']) 
+        ).all()
         horas_reservadas = {turno.fecha_hora.time() for turno in turnos_reservados}
+        
         horarios_disponibles_final = []
+        now = datetime.datetime.now()
+        
         for bloque in horarios_base:
             hora_actual = datetime.datetime.combine(fecha_obj, bloque.hora_inicio)
             hora_fin_bloque = datetime.datetime.combine(fecha_obj, bloque.hora_fin)
+            
             while hora_actual < hora_fin_bloque:
-                if hora_actual.time() not in horas_reservadas:
+                slot_reservado = hora_actual.time() in horas_reservadas
+                es_futuro = fecha_obj > now.date() or hora_actual > now
+                
+                if not slot_reservado and es_futuro:
                     horarios_disponibles_final.append({'hora': hora_actual.strftime('%H:%M')})
+                
                 hora_actual += duracion_turno
+                
         return jsonify({'horarios': horarios_disponibles_final}), 200
     except Exception as e:
         print(f"Error en obtener_horarios: {e}")
         return jsonify({'error': 'Error interno del servidor'}), 500
-
-
-# --- ¡RUTAS AÑADIDAS QUE FALTABAN! ---
-# Estas son las rutas que llaman los botones de 'mis-turnos.html'
-
+    
 @doctor_bp.route('/turno/<int:turno_id>/completar', methods=['POST'])
 @login_required
 def completar_turno(turno_id):
     turno = Turno.query.get_or_404(turno_id)
-    # Seguridad: ¿Este turno es de este doctor?
     if turno.doctor_id != current_user.doctor_perfil.id:
         return jsonify({'success': False, 'message': 'No autorizado'}), 403
     

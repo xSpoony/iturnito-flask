@@ -108,23 +108,3 @@
 
 </div>
 {% endblock %}
-
-{% block scripts %}
-<script>
-function mostrarAyuda() {
-    if (typeof window.mostrarMensaje === 'function') {
-        window.mostrarMensaje('Contacte a soporte para obtener ayuda: +54 11 1234-5678', 'info');
-    } else {
-        alert('Contacte a soporte para obtener ayuda: +54 11 1234-5678');
-    }
-}
-
-function contactarSoporte() {
-    const telefono = '+5411123456789';
-    if (confirm('¿Desea llamar a soporte médico?')) {
-        window.location.href = `tel:${telefono}`;
-    }
-}
-</script>
-{% endblock %}
-

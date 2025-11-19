@@ -3,6 +3,20 @@
 {% block header %}Configurar Horarios{% endblock %}
 
 {% block main_content %}
+<div x-data='{ message: null, type: null }'
+     @show-notification.window="message = $event.detail.message; type = $event.detail.type; setTimeout(() => { message = null }, 4000);"
+     x-show="message"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0 transform translate-y-2"
+     x-transition:enter-end="opacity-100 transform translate-y-0"
+     x-transition:leave="transition ease-in duration-300"
+     x-transition:leave-start="opacity-100 transform translate-y-0"
+     x-transition:leave-end="opacity-0 transform translate-y-2"
+     :class="{'bg-green-600': type === 'success', 'bg-red-600': type === 'error'}"
+     class="fixed top-4 right-4 text-white px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm">
+    <span x-text="message"></span>
+</div>
+
 <div x-data='horariosDoctor({{ config_json | safe }}, {{ horarios_json | safe }})' class="space-y-6">
     <div class="bg-white rounded-lg shadow-sm border p-4">
         <h3 class="font-medium text-gray-900 mb-4">Configuración General</h3>
@@ -100,9 +114,11 @@
             </button>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    </div>
 
+{% block scripts %}
 <script>
 // La lógica de Alpine.js ahora recibe los datos iniciales desde Flask
 function horariosDoctor(configInicial, diasSemanaInicial) {
@@ -127,9 +143,14 @@ function horariosDoctor(configInicial, diasSemanaInicial) {
             fecha: '',
             motivo: ''
         },
+        
+        // Función para mostrar la notificación
+        mostrarNotificacion(texto, tipo) {
+            // Utilizamos el $dispatch para enviar el mensaje al componente padre
+            this.$dispatch('show-notification', { message: texto, type: tipo });
+        },
 
         init() {
-            // Se inyectan desde Flask
             this.cargarExcepciones();
         },
 
@@ -162,13 +183,13 @@ function horariosDoctor(configInicial, diasSemanaInicial) {
                 });
                 const data = await response.json();
                 if (data.success) {
-                    alert('Configuración guardada correctamente');
+                    this.mostrarNotificacion('Configuración guardada correctamente', 'success');
                 } else {
-                    alert(data.message || 'Error al guardar');
+                    this.mostrarNotificacion(data.message || 'Error al guardar la configuración', 'error');
                 }
             } catch (e) {
                 console.error("Error al guardar config", e);
-                alert('Error de red');
+                this.mostrarNotificacion('Error de red al guardar la configuración', 'error');
             }
         },
 
@@ -181,13 +202,13 @@ function horariosDoctor(configInicial, diasSemanaInicial) {
                 });
                 const data = await response.json();
                 if (data.success) {
-                    alert('Horarios guardados correctamente');
+                    this.mostrarNotificacion('Horarios guardados correctamente', 'success');
                 } else {
-                    alert(data.message || 'Error al guardar');
+                    this.mostrarNotificacion(data.message || 'Error al guardar los horarios', 'error');
                 }
             } catch (e) {
                 console.error("Error al guardar horarios", e);
-                alert('Error de red');
+                this.mostrarNotificacion('Error de red al guardar los horarios', 'error');
             }
         },
 
@@ -213,17 +234,16 @@ function horariosDoctor(configInicial, diasSemanaInicial) {
                 });
                 const data = await response.json();
                 if (data.success) {
-                    console.log('Excepciones guardadas');
+                    this.mostrarNotificacion('Excepciones guardadas', 'success');
                 } else {
-                    alert(data.message || 'Error al guardar');
+                    this.mostrarNotificacion(data.message || 'Error al guardar las excepciones', 'error');
                 }
             } catch (e) {
                 console.error("Error al guardar excepciones", e);
-                alert('Error de red');
+                this.mostrarNotificacion('Error de red al guardar las excepciones', 'error');
             }
         }
     }
 }
 </script>
 {% endblock %}
-
