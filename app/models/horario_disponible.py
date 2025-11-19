@@ -18,7 +18,6 @@ class HorarioDisponible(db.Model):
     doctor = db.relationship('Doctor', back_populates='horarios_disponibles')
 
     def to_dict(self):
-        """Convierte el objeto a un diccionario para JSON."""
         return {
             'dia_semana': self.dia_semana,
             'hora_inicio': self.hora_inicio.strftime('%H:%M'),

@@ -7,7 +7,7 @@ class Turno(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fecha_hora = db.Column(db.DateTime, nullable=False)
     estado = db.Column(db.String(20), nullable=False, default='pendiente') # cambiado de 'reservado' a 'pendiente'
-    modalidad = db.Column(db.String(50), default='virtual')
+    modalidad = db.Column(db.String(50), default='presencial')
     observaciones = db.Column(db.Text, nullable=True)  # Notas del paciente al reservar
     notas_doctor = db.Column(db.Text, nullable=True)   # Notas del médico
 

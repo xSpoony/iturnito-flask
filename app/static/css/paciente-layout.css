@@ -1,0 +1,46 @@
+.safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+body {
+    -webkit-overflow-scrolling: touch;
+}
+
+input, select, textarea {
+    font-size: 16px; 
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Accesibilidad y Foco */
+button:focus,
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Hover solo en dispositivos que lo soportan */
+@media (hover: hover) {
+    .hover\:bg-blue-700:hover {
+        background-color: #1d4ed8;
+    }
+    .hover\:bg-gray-200:hover {
+        background-color: #e5e7eb;
+    }
+}
