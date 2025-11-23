@@ -73,7 +73,7 @@ def dashboard():
 # --- Gestión de Doctores (Completo) ---
 @admin_bp.route('/doctores', methods=['GET'])
 def doctores_index():
-    doctores = Doctor.query.options(joinedload(Doctor.user), joinedload(Doctor.especialidad)).all()
+    doctores = Doctor.query.join(User).filter(User.rol == 'doctor').options(joinedload(Doctor.user), joinedload(Doctor.especialidad)).all()
     return render_template('admin/doctores/index.html', doctores=doctores)
 
 @admin_bp.route('/doctores/crear', methods=['GET'])
@@ -202,7 +202,7 @@ def especialidades_eliminar(esp_id):
 # --- Gestión de Pacientes (Completo) ---
 @admin_bp.route('/pacientes', methods=['GET'])
 def pacientes_index():
-    pacientes = Paciente.query.options(joinedload(Paciente.user)).all()
+    pacientes = Paciente.query.join(User).filter(User.rol == 'paciente').options(joinedload(Paciente.user)).all()
     return render_template('admin/pacientes/index.html', pacientes=pacientes)
 
 @admin_bp.route('/pacientes/crear', methods=['GET'])

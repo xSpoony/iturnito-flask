@@ -1,6 +1,6 @@
 import os
 from flask import Flask
-from .extensions import db, migrate, login_manager, bcrypt
+from .extensions import db, migrate, login_manager, bcrypt, limiter
 from .models.user import User 
 
 def create_app():
@@ -14,6 +14,7 @@ def create_app():
     migrate.init_app(app, db)
     login_manager.init_app(app)
     bcrypt.init_app(app)
+    limiter.init_app(app)
 
     # --- Configuración de Flask-Login ---
     @login_manager.user_loader

@@ -3,6 +3,7 @@ Flask-SQLAlchemy
 Flask-Migrate
 Flask-Login
 Flask-Bcrypt
+Flask-Limiter
 python-dotenv
 gunicorn
 psycopg2-binary

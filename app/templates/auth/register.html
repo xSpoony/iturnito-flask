@@ -21,6 +21,16 @@
 
         <h2 class="text-xl font-semibold text-center mb-6">Registro de Usuario</h2>
 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 px-4 py-3 rounded-md border {{ 'bg-red-100 border-red-400 text-red-700' if category == 'danger' else 'bg-green-100 border-green-400 text-green-700' }}">
+                        <p class="text-sm">{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}   
+             
         <form method="POST" action="{{ url_for('auth.register') }}" class="space-y-4">
 
             <div>
