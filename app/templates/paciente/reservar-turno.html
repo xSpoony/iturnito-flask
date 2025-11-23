@@ -5,7 +5,6 @@
 {% block main_content %}
 
 <div class="space-y-4">
-    <!-- Mensajes (controlados por JS) -->
     <div id="mensaje-container" class="hidden text-white px-4 py-3 rounded-lg shadow-lg border-0">
         <div class="flex items-center space-x-3">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,7 +15,6 @@
         </div>
     </div>
 
-    <!-- Búsqueda -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
         <div class="relative">
             <input type="text"
@@ -31,7 +29,6 @@
         </div>
     </div>
 
-    <!-- Lista -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-100">
         <div class="flex items-center justify-between p-4 border-b border-gray-100">
             <h3 class="font-medium text-gray-800 text-base">Lista</h3>
@@ -41,23 +38,28 @@
         <div class="space-y-0" id="lista-doctores">
             {% for doctor in doctores %}
             {% if doctor.user and doctor.especialidad %}
+            {% set dias_trabajo = [] %}
+            {% for h in doctor.horarios_disponibles %}
+                {% if h.dia_semana not in dias_trabajo %}
+                    {% set _ = dias_trabajo.append(h.dia_semana) %}
+                {% endif %}
+            {% endfor %}
+
             <div class="doctor-card border-b border-gray-100 last:border-b-0"
                 data-doctor-id="{{ doctor.id }}"
                 data-nombre="{{ doctor.user.name }}"
                 data-especialidad="{{ doctor.especialidad.nombre }}"
-                data-dias-disponibles="{{ doctor.dias_disponibles_mes_actual | tojson }}"
+                data-dias-trabajo="{{ dias_trabajo | tojson }}" 
                 data-modalidad="{{ doctor.modalidad }}"
                 data-precio="{{ doctor.precio_consulta }}">
 
                 <div class="p-4 flex items-center space-x-4">
-                    <!-- Avatar -->
                     <div class="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
                         <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
                     </div>
 
-                    <!-- Información -->
                     <div class="flex-1 min-w-0">
                         <h4 class="font-medium text-gray-900 text-sm truncate">
                             Dr. {{ doctor.user.name }}
@@ -69,22 +71,16 @@
                         <div class="flex items-center mt-2 space-x-4 text-xs text-gray-600">
                             <div class="flex items-center space-x-1">
                                 <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                <span>{{ doctor.modalidad | upper }}</span>
+                                <span>{{ doctor.modalidad | upper if doctor.modalidad else 'PRESENCIAL' }}</span>
                             </div>
                             {% if doctor.precio_consulta %}
                             <span class="font-medium">${{ "%d"|format(doctor.precio_consulta | int) }}</span>
                             {% endif %}
                         </div>
-
-                        {% if doctor.descripcion %}
-                        <p class="text-xs text-gray-500 mt-1 line-clamp-1">
-                            {{ doctor.descripcion[:80] ~ '...' if doctor.descripcion|length > 80 else doctor.descripcion }}
-                        </p>
-                        {% endif %}
                     </div>
 
-                    <!-- Botón -->
-<button onclick="abrirModal({{ doctor.id }}, '{{ doctor.user.name | e }}', '{{ doctor.especialidad.nombre | e }}')"                            class="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium text-xs hover:bg-gray-900 transition-colors flex-shrink-0">
+                    <button onclick="abrirModal(this)"
+                            class="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium text-xs hover:bg-gray-900 transition-colors flex-shrink-0">
                         PEDIR TURNO
                     </button>
                 </div>
@@ -94,7 +90,6 @@
         </div>
     </div>
 
-    <!-- Estado vacío -->
     <div id="estado-vacio" class="hidden text-center py-12">
         <div class="w-16 h-16 mx-auto mb-4 rounded-lg bg-gray-100 flex items-center justify-center">
             <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,34 +101,32 @@
     </div>
 </div>
 
-<!-- Modal de Reserva -->
 <div id="modal-reserva" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm max-h-[99vh] overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm max-h-[99vh] overflow-hidden flex flex-col">
 
-        <!-- Header -->
-        <div class="bg-white p-4 border-b border-gray-100 relative">
-            <button onclick="cerrarModal()" class="absolute left-4 top-1/2 transform -translate-y-1/2">
-                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white p-4 border-b border-gray-100 grid grid-cols-[auto_1fr_auto] items-center gap-2">
+            <button onclick="cerrarModal()" class="text-gray-600 p-1 hover:bg-gray-100 rounded-full -ml-2 col-start-1">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
-            <h3 class="text-center font-medium text-gray-900 text-base">SELECCIONAR FECHA</h3>
-            <div class="text-center text-xs text-gray-500 mt-1">
-                <span class="text-gray-900">CONSULTA VIRTUAL</span> - <span id="modal-doctor-info">DR. MARTÍN DÍAZ</span>
+            
+            <div class="text-center col-start-2 justify-self-center w-full">
+                <h3 class="font-medium text-gray-900 text-base truncate">SELECCIONAR FECHA</h3>
+                <div class="text-xs text-gray-500 mt-0.5 truncate px-1">
+                    <span id="modal-doctor-info">DR. NOMBRE</span>
+                </div>
             </div>
-        </div>
+            
+            <div class="w-6 col-start-3"></div> </div>
 
-        <!-- Contenido -->
-        <div class="p-4 max-h-[calc(90vh)] overflow-y-auto">
+        <div class="p-4 overflow-y-auto">
 
-            <!-- Mes -->
             <div class="text-center mb-4">
-                <h4 class="text-lg font-medium text-gray-900 uppercase tracking-wide">JULIO</h4>
+                <h4 class="text-lg font-medium text-gray-900 uppercase tracking-wide" id="calendario-mes">MES</h4>
             </div>
 
-            <!-- Calendario -->
             <div class="mb-6">
-                <!-- Días de la semana -->
                 <div class="grid grid-cols-7 gap-1 mb-2">
                     <div class="text-center text-xs font-medium text-gray-500 py-2">D</div>
                     <div class="text-center text-xs font-medium text-gray-500 py-2">L</div>
@@ -144,11 +137,9 @@
                     <div class="text-center text-xs font-medium text-gray-500 py-2">S</div>
                 </div>
 
-                <!-- Días del mes -->
                 <div id="calendario-dias" class="grid grid-cols-7 gap-1"></div>
             </div>
 
-            <!-- Loading -->
             <div id="loading-horarios" class="hidden text-center py-8">
                 <div class="w-8 h-8 mx-auto mb-3 rounded-lg bg-blue-100 flex items-center justify-center">
                     <svg class="animate-spin w-4 h-4 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,33 +149,21 @@
                 <p class="text-gray-600 text-sm">Cargando horarios...</p>
             </div>
 
-            <!-- Disponibilidad -->
             <div id="disponibilidad-section" class="hidden">
                 <h5 class="font-medium text-gray-900 text-sm mb-3 uppercase tracking-wide">DISPONIBILIDAD</h5>
                 <div id="horarios-container" class="grid grid-cols-2 gap-2 mb-6"></div>
             </div>
 
-            <!-- Sin horarios -->
             <div id="sin-horarios" class="hidden text-center py-8">
-                <div class="w-12 h-12 mx-auto mb-3 rounded-lg bg-gray-100 flex items-center justify-center">
-                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
                 <p class="text-gray-600 text-sm">Sin horarios disponibles</p>
                 <p class="text-gray-400 text-xs">Seleccione otra fecha</p>
             </div>
 
-            <!-- Botones de acción -->
             <div id="botones-accion" class="hidden space-y-3">
-                <button onclick="confirmarReserva()"
-                        id="btn-confirmar"
-                        class="w-full bg-gray-800 text-white py-3 rounded-lg font-medium text-sm hover:bg-gray-900 transition-colors">
+                <button onclick="confirmarReserva()" id="btn-confirmar" class="w-full bg-gray-800 text-white py-3 rounded-lg font-medium text-sm hover:bg-gray-900 transition-colors">
                     CONFIRMAR
                 </button>
-
-                <button onclick="cerrarModal()"
-                        class="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors">
+                <button onclick="cerrarModal()" class="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors">
                     CANCELAR
                 </button>
             </div>
@@ -197,10 +176,10 @@
 {% block scripts %}
 <script>
 window.API_URLS = {
-        OBTENER_HORARIOS: "{{ url_for('doctor.obtener_horarios') }}",
-        CONFIRMAR_TURNO: "{{ url_for('paciente.confirmar_turno') }}",
-        MIS_TURNOS: "{{ url_for('paciente.mis_turnos') }}"
-    };
+    OBTENER_HORARIOS: "{{ url_for('doctor.obtener_horarios') }}",
+    CONFIRMAR_TURNO: "{{ url_for('paciente.confirmar_turno') }}",
+    MIS_TURNOS: "{{ url_for('paciente.mis_turnos') }}"
+};
 </script>
 
 <script src="{{ url_for('static', filename='js/paciente.js') }}"></script>
